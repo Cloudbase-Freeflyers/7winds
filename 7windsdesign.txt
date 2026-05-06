@@ -1,0 +1,175 @@
+# 7Winds Landing Page Manifest — Tandem Flights
+
+## Brand
+name: 7Winds Paragliding Club
+website: https://7windsparagliding.com/
+logo: /assets/LOGO-2017.png
+language: he
+direction: rtl
+tone: מרגש, בטוח, מקצועי, חווייתי, אנושי
+
+## Brand Colors
+primary_sky_blue: "#1ABBEF"
+primary_green: "#8BC441"
+primary_yellow: "#FDD62A"
+dark_gray: "#4E4E4E"
+black: "#050606"
+soft_light: "#F5F8FA"
+white: "#FFFFFF"
+
+## Typography
+heading_font: Assistant / Heebo / Rubik
+body_font: Assistant / Heebo / Rubik
+style: clean, modern, adventure, airy
+
+## Page Goal
+Convert visitors into:
+- WhatsApp leads
+- Phone calls
+- Booking requests
+- Gift voucher purchases
+
+## Target Audience
+- זוגות
+- משפחות
+- מחפשי אדרנלין
+- קוני מתנות
+- תיירים
+- אנשים עם מגבלויות בתיאום מראש
+
+## Hero Section
+headline: טיסת מצנח רחיפה זוגית (טנדם) – חוויה שלא תשכחו בחיים
+alternative_headline: המתנה היחידה שגורמת לצרוח… אבל מהתרגשות 😄
+subheadline: טיסה עם מדריך מקצועי | אין צורך בניסיון | נופים מטורפים
+accessibility_note: מתאים גם לאנשים עם מגבלויות – בתיאום מראש
+
+primary_cta: קבעו טיסה עכשיו
+secondary_cta: שלחו הודעה בוואטסאפ
+
+## Video Section
+title: מה זה טיסת חוויה
+embed_type: YouTube
+description: סרטון קצר שמסביר מה קורה בטיסה, איך זה עובד, ולמה זה מתאים כמעט לכל אחד.
+
+## Pricing
+
+### ארסוף / נתניה
+- 10 דקות: ₪300
+- 20 דקות: ₪450
+- טיסת אקרובטיקה עם פעלולים: ₪500
+- תוספת צילום וידאו/תמונות: ₪150
+
+### רמת הגולן / גלבוע
+- טיסת טנדם: ₪750
+
+pricing_notes:
+- הטיסות מתבצעות בהתאם לתנאי מזג האוויר
+- אין צורך בניסיון קודם
+- כל הטיסות מתבצעות עם מדריך מוסמך
+
+## Gift Voucher Section
+title: מחפשים מתנה מקורית?
+text: שובר מתנה לטיסת מצנח רחיפה – חוויה בלתי נשכחת.
+suitable_for:
+- יום הולדת
+- זוגות
+- הפתעות
+- מתנות לעובדים
+cta: קנה שובר מתנה
+
+## Why Choose 7Winds
+- בית הספר הגדול בישראל
+- מדריכים מקצועיים ומוסמכים
+- ציוד מתקדם ובטיחותי
+- מאות טיסות ותלמידים בכל שנה
+- פריסה ארצית – צפון | מרכז | דרום
+- ניסיון בטיסות מותאמות לאנשים עם מגבלויות
+
+## Flight Experience
+steps:
+- הגעה ותדריך קצר
+- חיבור לציוד עם מדריך
+- ריצה קצרה והמראה
+- טיסה מעל הים או נופים פתוחים
+- נחיתה רכה ובטוחה
+
+features:
+- תחושת חופש ואדרנלין
+- אפשרות לצילום במהלך הטיסה
+- אפשרות לטיסת אקרובטיקה
+
+## Accessibility Section
+title: טיסות מותאמות לאנשים עם מגבלויות
+text: אצלנו גם מי שחשב שזה לא אפשרי — יכול לעוף.
+bullets:
+- התאמה אישית לכל אדם
+- ציוד ייעודי במידת הצורך
+- צוות מנוסה בטיסות נגישות
+- ליווי מלא מרגע ההגעה ועד הנחיתה
+important_note: בתיאום מראש בלבד, בהתאם לסוג המגבלה ותנאי השטח.
+cta: דברו איתנו להתאמה אישית
+
+## Safety Section
+- טיסה עם מדריך מוסמך בלבד
+- ציוד תקני ובדוק
+- פעילות בהתאם לתנאי מזג האוויר
+- תדריך בטיחות לפני כל טיסה
+
+## Locations
+- ארסוף
+- נתניה
+- רמת הגולן
+- גלבוע
+
+## Testimonials Placeholder
+- "חוויה מטורפת!"
+- "המתנה הכי טובה שקיבלתי"
+- "צוות מקצועי ומרגיע"
+
+## Viral Copy
+- אם לא צרחת – הכסף חוזר 😄
+- זה מתחיל בפחד קטן… ונגמר בהתמכרות
+- יאללה באוויר!
+
+## Contact Section
+fields:
+- שם
+- טלפון
+- הודעה
+
+contact_methods:
+- WhatsApp sticky button
+- Phone click-to-call
+- Lead form
+
+## Mobile Requirements
+- Sticky WhatsApp button at bottom
+- Fast loading
+- Short scroll
+- Big CTA buttons
+- Strong visual hero image/video
+- RTL optimized layout
+
+## Technical Requirements
+page_type: One Page Landing
+tracking:
+- Google Analytics
+- Meta Pixel
+integrations:
+- WhatsApp API / direct WhatsApp link
+- Lead form submission
+performance:
+- compress images
+- lazy load video
+- mobile first
+seo:
+- title: טיסת טנדם במצנח רחיפה | 7Winds
+- description: טיסת מצנח רחיפה זוגית עם מדריך מקצועי בארסוף, נתניה, רמת הגולן וגלבוע. מתאים גם כמתנה חווייתית.
+- keywords: טיסת טנדם, מצנח רחיפה, טיסת חוויה, טיסת מצנח רחיפה, שובר מתנה, 7Winds
+
+## Button Microcopy
+- אני רוצה לטוס
+- תפסו לי מקום
+- יאללה באוויר
+- בואו נמריא
+- שלחו וואטסאפ

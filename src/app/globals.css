@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-brand-soft text-brand-black antialiased;
+  font-feature-settings: "ss01", "kern";
+}
+
+/* Hebrew text shouldn't be italicized */
+em, i {
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* Subtle scrollbar that matches the brand */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-brand-sky/40 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-brand-sky/70;
+}
+
+/* Reusable section padding */
+.section {
+  @apply px-5 sm:px-8 lg:px-12 py-16 sm:py-20 lg:py-24;
+}
+
+/* CTA button base */
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full font-bold transition
+         focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-sky/40
+         disabled:opacity-60 disabled:cursor-not-allowed;
+}
+.btn-lg { @apply px-8 py-4 text-lg; }
+.btn-md { @apply px-6 py-3 text-base; }
+
+.btn-primary {
+  @apply btn bg-brand-yellow text-brand-black hover:brightness-95 shadow-lg shadow-brand-yellow/30;
+}
+.btn-secondary {
+  @apply btn bg-brand-green text-white hover:brightness-110 shadow-lg shadow-brand-green/30;
+}
+.btn-outline {
+  @apply btn border-2 border-white/80 text-white hover:bg-white hover:text-brand-black;
+}
+.btn-whatsapp {
+  @apply btn bg-[#25D366] text-white hover:brightness-110 shadow-lg shadow-emerald-500/30;
+}
+
+/* Hero halo dots */
+.hero-cloud {
+  @apply absolute rounded-full blur-3xl opacity-50 animate-floaty;
+}
