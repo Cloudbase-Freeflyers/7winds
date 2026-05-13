@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { FLIGHT_STEPS, FLIGHT_FEATURES } from "@/lib/constants";
 
 export default function FlightExperience() {
@@ -5,7 +6,7 @@ export default function FlightExperience() {
     <section id="experience" className="section bg-brand-soft">
       <div className="max-w-6xl mx-auto">
         <div className="text-center">
-          <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-brand-black">
+          <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-brand-black">
             איך נראית טיסה?
           </h2>
           <p className="mt-3 text-brand-dark max-w-2xl mx-auto">
@@ -13,7 +14,7 @@ export default function FlightExperience() {
           </p>
         </div>
 
-        <ol className="mt-12 grid gap-5 md:grid-cols-5">
+        <ol className="mt-8 grid gap-4 md:grid-cols-5">
           {FLIGHT_STEPS.map((step, i) => (
             <li key={step} className="relative">
               <div className="rounded-2xl bg-white ring-1 ring-black/5 p-5 h-full shadow-sm hover:shadow-md transition">
@@ -37,6 +38,23 @@ export default function FlightExperience() {
               ✦ {f}
             </span>
           ))}
+        </div>
+
+        {/* Hero shot from the field */}
+        <div className="mt-10 relative rounded-3xl overflow-hidden aspect-[21/9] shadow-xl ring-1 ring-black/5">
+          <Image
+            src="/images/haifa-bay.jpeg"
+            alt="טיסת מצנח רחיפה מעל חוף הים עם 7Winds"
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 900px"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+          <div className="absolute bottom-5 start-6 end-6">
+            <p className="text-white font-display font-extrabold text-xl sm:text-2xl drop-shadow">
+              מעל המים, מעל הגבולות
+            </p>
+          </div>
         </div>
       </div>
     </section>

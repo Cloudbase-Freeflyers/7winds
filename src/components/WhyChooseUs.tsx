@@ -7,7 +7,7 @@ export default function WhyChooseUs() {
     <section id="why" className="section bg-white">
       <div className="max-w-6xl mx-auto">
         <div className="text-center">
-          <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-brand-black">
+          <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-brand-black">
             למה לטוס איתנו?
           </h2>
           <p className="mt-3 text-brand-dark max-w-2xl mx-auto">
@@ -15,14 +15,14 @@ export default function WhyChooseUs() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {WHY_US.map((reason, i) => (
             <div
               key={reason}
               className="group rounded-2xl bg-brand-soft ring-1 ring-black/5 p-6 hover:bg-white hover:shadow-lg transition"
             >
               <div className="flex items-start gap-4">
-                <span className="text-3xl group-hover:scale-110 transition">
+                <span className="text-2xl group-hover:scale-110 transition">
                   {ICONS[i]}
                 </span>
                 <p className="text-brand-black font-semibold leading-relaxed">

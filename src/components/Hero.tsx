@@ -1,4 +1,5 @@
 import { whatsappLink } from "@/lib/constants";
+import ParagliderCanvas from "@/components/ParagliderCanvas";
 
 export default function Hero() {
   const waMessage = "היי 7Winds! אשמח לפרטים על טיסת טנדם 🪂";
@@ -8,6 +9,9 @@ export default function Hero() {
       id="top"
       className="relative isolate overflow-hidden bg-hero-radial text-white"
     >
+      {/* Animated paragliders canvas — sits behind all content */}
+      <ParagliderCanvas />
+
       <div className="hero-cloud bg-brand-sky w-[420px] h-[420px] -top-20 -start-20" />
       <div
         className="hero-cloud bg-brand-green w-[360px] h-[360px] bottom-0 end-10"
@@ -18,12 +22,12 @@ export default function Hero() {
         style={{ animationDelay: "3s" }}
       />
 
-      <div className="relative max-w-5xl mx-auto px-5 sm:px-8 py-24 sm:py-28 lg:py-36 text-center">
+      <div className="relative max-w-5xl mx-auto px-5 sm:px-8 py-14 sm:py-20 lg:py-24 text-center">
         <span className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur px-4 py-1.5 text-sm font-semibold ring-1 ring-white/20">
           🪂 בית הספר הגדול בישראל למצנחי רחיפה
         </span>
 
-        <h1 className="mt-6 font-display font-extrabold tracking-tight text-4xl sm:text-5xl lg:text-6xl leading-tight">
+        <h1 className="mt-5 font-display font-extrabold tracking-tight text-3xl sm:text-4xl lg:text-5xl leading-tight">
           טיסת מצנח רחיפה זוגית (טנדם)
           <br />
           <span className="bg-sky-gradient bg-clip-text text-transparent">
@@ -31,14 +35,14 @@ export default function Hero() {
           </span>
         </h1>
 
-        <p className="mt-5 text-lg sm:text-xl text-white/85 max-w-2xl mx-auto">
+        <p className="mt-4 text-base sm:text-lg text-white/85 max-w-2xl mx-auto">
           טיסה עם מדריך מקצועי · אין צורך בניסיון · נופים מטורפים
         </p>
         <p className="mt-2 text-base text-white/70 max-w-2xl mx-auto">
           המתנה היחידה שגורמת לצרוח… אבל מהתרגשות 😄
         </p>
 
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+        <div className="mt-7 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
           <a href="#contact" className="btn-primary btn-lg w-full sm:w-auto">
             קבעו טיסה עכשיו
           </a>
@@ -52,7 +56,7 @@ export default function Hero() {
           </a>
         </div>
 
-        <p className="mt-8 text-sm text-white/70">
+        <p className="mt-5 text-sm text-white/70">
           ♿ מתאים גם לאנשים עם מגבלויות – בתיאום מראש
         </p>
       </div>

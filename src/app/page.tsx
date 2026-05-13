@@ -8,9 +8,10 @@ import FlightExperience from "@/components/FlightExperience";
 import Accessibility from "@/components/Accessibility";
 import Safety from "@/components/Safety";
 import Locations from "@/components/Locations";
-import Testimonials from "@/components/Testimonials";
+import TripAdvisorReviews from "@/components/TripAdvisorReviews";
 import ViralCopy from "@/components/ViralCopy";
 import ContactSection from "@/components/ContactSection";
+import ShortsCarousel from "@/components/ShortsCarousel";
 import Footer from "@/components/Footer";
 import StickyWhatsApp from "@/components/StickyWhatsApp";
 
@@ -25,10 +26,11 @@ export default function Home() {
         <FlightExperience />
         <WhyChooseUs />
         <GiftVoucher />
+        <ShortsCarousel />
         <Accessibility />
         <Safety />
         <Locations />
-        <Testimonials />
+        <TripAdvisorReviews />
         <ViralCopy />
         <ContactSection />
       </main>

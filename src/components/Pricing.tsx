@@ -5,7 +5,7 @@ export default function Pricing() {
     <section id="pricing" className="section">
       <div className="max-w-6xl mx-auto">
         <div className="text-center">
-          <h2 className="font-display text-3xl sm:text-4xl font-extrabold text-brand-black">
+          <h2 className="font-display text-2xl sm:text-3xl font-extrabold text-brand-black">
             מחירים ומסלולים
           </h2>
           <p className="mt-3 text-brand-dark max-w-2xl mx-auto">
@@ -13,14 +13,14 @@ export default function Pricing() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-6 md:grid-cols-2">
+        <div className="mt-8 grid gap-5 md:grid-cols-2">
           {PRICING_LOCATIONS.map((loc) => (
             <article
               key={loc.id}
-              className="relative rounded-3xl bg-white shadow-xl ring-1 ring-black/5 p-7 sm:p-9 overflow-hidden"
+              className="relative rounded-3xl bg-white shadow-xl ring-1 ring-black/5 p-5 sm:p-7 overflow-hidden"
             >
               <div className="absolute -top-10 -end-10 w-32 h-32 rounded-full bg-brand-sky/15 blur-2xl" />
-              <h3 className="font-display text-2xl font-extrabold text-brand-black">
+              <h3 className="font-display text-xl font-extrabold text-brand-black">
                 {loc.title}
               </h3>
               <ul className="mt-6 divide-y divide-black/5">
@@ -43,7 +43,7 @@ export default function Pricing() {
           ))}
         </div>
 
-        <ul className="mt-10 grid gap-3 sm:grid-cols-3 text-center text-sm text-brand-dark">
+        <ul className="mt-7 grid gap-3 sm:grid-cols-3 text-center text-sm text-brand-dark">
           {PRICING_NOTES.map((note) => (
             <li
               key={note}

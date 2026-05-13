@@ -11,10 +11,10 @@ export default function ContactSection() {
           <span className="inline-block rounded-full bg-brand-sky/10 text-brand-sky text-xs font-bold tracking-wide px-3 py-1">
             יאללה באוויר 🪂
           </span>
-          <h2 className="mt-4 font-display text-3xl sm:text-4xl font-extrabold text-brand-black">
+          <h2 className="mt-3 font-display text-2xl sm:text-3xl font-extrabold text-brand-black">
             בואו נמריא יחד
           </h2>
-          <p className="mt-4 text-brand-dark text-lg leading-relaxed">
+          <p className="mt-3 text-brand-dark leading-relaxed">
             השאירו פרטים ונחזור אליכם בהקדם לתיאום טיסה. אפשר גם בוואטסאפ או
             בטלפון – מה שהכי נוח לכם.
           </p>

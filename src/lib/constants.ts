@@ -14,7 +14,7 @@ export const CONTACT = {
 } as const;
 
 export const youtubeVideoId =
-  process.env.NEXT_PUBLIC_YOUTUBE_VIDEO_ID || "dQw4w9WgXcQ";
+  process.env.NEXT_PUBLIC_YOUTUBE_VIDEO_ID || "nKW4Dyv_uJ4";
 
 export function whatsappLink(message: string) {
   return `https://wa.me/${CONTACT.whatsappNumber}?text=${encodeURIComponent(message)}`;
@@ -110,6 +110,19 @@ export const VIRAL_LINES = [
   "אם לא צרחת – הכסף חוזר 😄",
   "זה מתחיל בפחד קטן… ונגמר בהתמכרות",
   "יאללה באוויר!",
+] as const;
+
+export const YOUTUBE_CHANNEL_URL = "https://www.youtube.com/@7WindsParagliding";
+export const YOUTUBE_SHORTS_URL = "https://www.youtube.com/@7WindsParagliding/shorts";
+
+// Shorts from the channel — update as new ones are posted
+export const YOUTUBE_SHORTS = [
+  { id: "rDt6lUSI4RY" },
+  { id: "uCzDCEMBCWs" },
+  { id: "uC-8cWQPDVk" },
+  { id: "66a3M3_L1ps" },
+  { id: "O6ISeNT35Jg" },
+  { id: "KGWFK2Yp2OE" },
 ] as const;
 
 export const BUTTON_MICROCOPY = [
