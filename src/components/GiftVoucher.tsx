@@ -5,7 +5,7 @@ import { VOUCHER_OCCASIONS } from "@/lib/constants";
 export default function GiftVoucher() {
   return (
     <section id="voucher" className="section bg-white">
-      <div className="max-w-6xl mx-auto grid gap-10 lg:grid-cols-2 items-start">
+      <div className="max-w-6xl mx-auto grid gap-8 lg:grid-cols-[1fr_2fr] items-start">
         <div>
           <span className="inline-block rounded-full bg-brand-yellow/30 text-brand-black text-xs font-bold tracking-wide px-3 py-1">
             מתנה מקורית 🎁
@@ -40,7 +40,7 @@ export default function GiftVoucher() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-8">
+        <div className="grid gap-6 sm:grid-cols-2 items-start">
           <VoucherCard />
           <VoucherForm />
         </div>
