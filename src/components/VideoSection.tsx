@@ -17,7 +17,7 @@ export default function VideoSection() {
         </div>
 
         {/* Video + photos side-by-side on desktop */}
-        <div className="mt-8 flex flex-col sm:flex-row gap-4 items-stretch">
+        <div className="mt-8 flex flex-col sm:flex-row gap-4 items-start">
 
           {/* Vertical video — fixed width on desktop so it doesn't stretch */}
           <div className="w-full sm:w-64 md:w-72 shrink-0 mx-auto sm:mx-0">
@@ -34,9 +34,9 @@ export default function VideoSection() {
             </div>
           </div>
 
-          {/* Photos — fill remaining space, stacked vertically */}
+          {/* Photos — fixed aspect ratio so they never stretch */}
           <div className="flex flex-col gap-4 flex-1 min-w-0">
-            <div className="relative rounded-2xl overflow-hidden flex-1 min-h-40 shadow-md ring-1 ring-black/5">
+            <div className="relative rounded-2xl overflow-hidden aspect-[4/3] shadow-md ring-1 ring-black/5">
               <Image
                 src="/images/haifa-bay.jpeg"
                 alt="טיסת מצנח רחיפה מעל חוף הים — 7Winds"
@@ -45,7 +45,7 @@ export default function VideoSection() {
                 sizes="(max-width: 640px) 100vw, 50vw"
               />
             </div>
-            <div className="relative rounded-2xl overflow-hidden flex-1 min-h-40 shadow-md ring-1 ring-black/5">
+            <div className="relative rounded-2xl overflow-hidden aspect-[4/3] shadow-md ring-1 ring-black/5">
               <Image
                 src="/images/field-flight.jpeg"
                 alt="טיסת מצנח רחיפה עם נוף שדות — 7Winds"

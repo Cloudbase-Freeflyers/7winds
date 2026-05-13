@@ -40,7 +40,7 @@ export default function GiftVoucher() {
           </div>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 items-start">
+        <div className="grid gap-6 sm:grid-cols-2 items-stretch">
           <VoucherCard />
           <VoucherForm />
         </div>

@@ -2,98 +2,137 @@
 
 import { useEffect, useRef } from "react";
 
+// Focal / vanishing point ratios (relative to canvas size)
+const FX = 0.5;   // horizontal centre
+const FY = 0.28;  // upper third — the "horizon"
+
+const COLORS = [
+  "rgba(255,255,255,",
+  "rgba(26,187,239,",
+  "rgba(139,196,65,",
+  "rgba(253,214,42,",
+];
+
 interface Glider {
-  x: number;
-  y: number;
-  /** half-width of the canopy */
-  r: number;
+  /** spawn position, jittered slightly around the focal point */
+  ox: number;
+  oy: number;
+  /** direction the glider flies outward from the focal point */
+  angle: number;
+  /** 0→1 lifecycle progress */
+  t: number;
   speed: number;
-  opacity: number;
+  /** canopy half-width at t = 1 */
+  maxR: number;
+  /** peak opacity */
+  maxAlpha: number;
+  /** oscillation phase for thermal sway */
   phase: number;
-  /** base colour string, WITHOUT the closing paren, e.g. "rgba(26,187,239," */
   color: string;
 }
 
-const COLORS = [
-  "rgba(255,255,255,",    // white
-  "rgba(26,187,239,",     // brand-sky
-  "rgba(139,196,65,",     // brand-green
-  "rgba(253,214,42,",     // brand-yellow
-];
+function createGlider(W: number, H: number, stagger = false): Glider {
+  // spawn jittered around the vanishing point
+  const jitter = Math.min(W, H) * 0.07;
+  const ox = W * FX + (Math.random() - 0.5) * jitter * 2;
+  const oy = H * FY + (Math.random() - 0.5) * jitter;
 
-function spawn(canvasW: number, canvasH: number, startRight = false): Glider {
-  const r = 14 + Math.random() * 44; // 14–58 px half-width
-  const depth = r / 58; // 0 = tiny/far, 1 = big/close
+  // bias angles downward so most gliders fly toward the lower viewport
+  // range: roughly -100° to +280° centred on "down" (90°)
+  const angle = (Math.random() - 0.5) * Math.PI * 1.6 + Math.PI * 0.5;
+
   return {
-    x: startRight ? Math.random() * canvasW : canvasW + r * 2.5,
-    y: canvasH * 0.06 + Math.random() * canvasH * 0.82,
-    r,
-    // bigger gliders are closer → move faster; scale to ~0.3–1.1 px/frame
-    speed: 0.28 + depth * 0.85,
-    opacity: 0.08 + depth * 0.32,
+    ox, oy, angle,
+    t: stagger ? Math.random() * 0.85 : 0,
+    speed: 0.0028 + Math.random() * 0.0032,
+    maxR: 36 + Math.random() * 56,
+    maxAlpha: 0.18 + Math.random() * 0.38,
     phase: Math.random() * Math.PI * 2,
     color: COLORS[Math.floor(Math.random() * COLORS.length)],
   };
 }
 
-/**
- * Draw a single paraglider silhouette.
- * Origin (gx, gy) is the centre of the canopy leading edge.
- */
-function draw(ctx: CanvasRenderingContext2D, g: Glider, time: number) {
-  const { x: gx, r, opacity, color, phase } = g;
-  // gentle vertical sway simulating thermals
-  const gy = g.y + Math.sin(time * 0.55 + phase) * r * 0.18;
+function drawGlider(
+  ctx: CanvasRenderingContext2D,
+  g: Glider,
+  W: number,
+  H: number,
+  timeSec: number,
+) {
+  const { ox, oy, angle, t, maxR, maxAlpha, color, phase } = g;
 
-  const canopyH = r * 0.42;
-  const riserGap = r * 0.16;
-  const pilotY = gy + r * 0.68;
+  // Canopy radius grows with t
+  const r = maxR * t;
+  if (r < 1) return;
+
+  // Travel distance from focal point
+  const dist = t * Math.max(W, H) * 0.9;
+  const cx = ox + Math.cos(angle) * dist;
+  const cy = oy + Math.sin(angle) * dist;
+
+  // Bell-curve opacity: fade in fast, hold, fade out gently
+  const alpha = Math.sin(Math.min(t * Math.PI, Math.PI)) * maxAlpha;
+  if (alpha < 0.008) return;
+
+  // Thermal sway — amplitude scales with size (bigger = more sway)
+  const sway = Math.sin(timeSec * 0.65 + phase) * r * 0.10;
+  const gy = cy + sway;
+
+  // Slight banking tilt in the direction of sway
+  const tiltRad = (sway / r) * 0.22;
+
+  const canopyH = r * 0.40;
+  const riserGap = r * 0.15;
+  const pilotY = gy + r * 0.66;
 
   ctx.save();
-  ctx.globalAlpha = opacity;
+  ctx.globalAlpha = alpha;
+  ctx.translate(cx, gy);
+  ctx.rotate(tiltRad);
+  ctx.translate(-cx, -gy);
 
-  // ── canopy fill ──────────────────────────────────────────────
+  // ── canopy fill ────────────────────────────────────────
   ctx.beginPath();
-  ctx.ellipse(gx, gy, r, canopyH, 0, Math.PI, 0);
-  ctx.fillStyle = color + (opacity * 0.55).toFixed(2) + ")";
+  ctx.ellipse(cx, gy, r, canopyH, 0, Math.PI, 0);
+  ctx.fillStyle = color + (alpha * 0.5).toFixed(2) + ")";
   ctx.fill();
 
-  // ── canopy edge / outline ────────────────────────────────────
+  // ── canopy edge ────────────────────────────────────────
   ctx.beginPath();
-  ctx.ellipse(gx, gy, r, canopyH, 0, Math.PI, 0);
-  ctx.strokeStyle = color + "0.9)";
-  ctx.lineWidth = Math.max(0.8, r * 0.04);
+  ctx.ellipse(cx, gy, r, canopyH, 0, Math.PI, 0);
+  ctx.strokeStyle = color + "0.95)";
+  ctx.lineWidth = Math.max(0.6, r * 0.038);
   ctx.stroke();
 
-  // ── internal cell lines (give depth to the wing) ────────────
-  ctx.strokeStyle = color + "0.45)";
-  ctx.lineWidth = Math.max(0.5, r * 0.025);
+  // ── internal cell lines ────────────────────────────────
+  ctx.strokeStyle = color + "0.4)";
+  ctx.lineWidth = Math.max(0.4, r * 0.022);
   for (let i = 1; i <= 5; i++) {
-    const t = i / 6;
-    const cx = gx - r + r * 2 * t;
-    const relX = (cx - gx) / r;
+    const frac = i / 6;
+    const cellX = cx - r + r * 2 * frac;
+    const relX = (cellX - cx) / r;
     const cellH = canopyH * Math.sqrt(Math.max(0, 1 - relX * relX));
     ctx.beginPath();
-    ctx.moveTo(cx, gy);
-    ctx.lineTo(cx, gy - cellH);
+    ctx.moveTo(cellX, gy);
+    ctx.lineTo(cellX, gy - cellH);
     ctx.stroke();
   }
 
-  // ── risers / lines ───────────────────────────────────────────
-  ctx.strokeStyle = color + "0.65)";
-  ctx.lineWidth = Math.max(0.5, r * 0.022);
-  const riserAnchors = [-r * 0.62, -r * 0.22, r * 0.22, r * 0.62];
-  const pilotAnchors = [-riserGap, -riserGap * 0.4, riserGap * 0.4, riserGap];
+  // ── risers ────────────────────────────────────────────
+  ctx.strokeStyle = color + "0.6)";
+  ctx.lineWidth = Math.max(0.4, r * 0.020);
+  const wingAnchors = [-r * 0.60, -r * 0.20, r * 0.20, r * 0.60];
+  const harnessAnchors = [-riserGap, -riserGap * 0.35, riserGap * 0.35, riserGap];
   for (let i = 0; i < 4; i++) {
     ctx.beginPath();
-    ctx.moveTo(gx + riserAnchors[i], gy);
-    ctx.lineTo(gx + pilotAnchors[i], pilotY);
+    ctx.moveTo(cx + wingAnchors[i], gy);
+    ctx.lineTo(cx + harnessAnchors[i], pilotY);
     ctx.stroke();
   }
 
-  // ── pilot body (small ellipse) ───────────────────────────────
+  // ── pilot body ────────────────────────────────────────
   ctx.beginPath();
-  ctx.ellipse(gx, pilotY + r * 0.10, r * 0.09, r * 0.15, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, pilotY + r * 0.09, r * 0.085, r * 0.14, 0, 0, Math.PI * 2);
   ctx.fillStyle = color + "0.85)";
   ctx.fill();
 
@@ -104,10 +143,9 @@ export default function ParagliderCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const canvasEl = canvasRef.current;
-    if (!canvasEl) return;
-    const canvas: HTMLCanvasElement = canvasEl;
-    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     let rafId: number;
@@ -119,24 +157,28 @@ export default function ParagliderCanvas() {
     }
 
     function init() {
-      const count = Math.round((canvas.width * canvas.height) / 55000) + 7;
+      // 10–14 gliders; stagger their progress so the screen isn't empty at start
+      const count = Math.max(10, Math.round((canvas.width * canvas.height) / 60000));
       gliders = Array.from({ length: count }, () =>
-        spawn(canvas.width, canvas.height, true)
+        createGlider(canvas.width, canvas.height, true),
       );
     }
 
     let prev = 0;
     function frame(now: number) {
-      const dt = Math.min((now - prev) / 1000, 0.05); // cap delta to 50 ms
+      const dt = Math.min((now - prev) / 1000, 0.05);
       prev = now;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      const W = canvas.width;
+      const H = canvas.height;
+
       for (let i = 0; i < gliders.length; i++) {
-        draw(ctx, gliders[i], now / 1000);
-        gliders[i].x -= gliders[i].speed * dt * 60;
-        if (gliders[i].x < -gliders[i].r * 2.5) {
-          gliders[i] = spawn(canvas.width, canvas.height, false);
+        drawGlider(ctx, gliders[i], W, H, now / 1000);
+        gliders[i].t += gliders[i].speed * dt * 60;
+        if (gliders[i].t >= 1) {
+          gliders[i] = createGlider(W, H, false);
         }
       }
 

@@ -65,14 +65,14 @@ export default function VoucherForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="rounded-3xl bg-brand-soft ring-1 ring-black/5 p-7 sm:p-8 shadow-sm"
+      className="rounded-3xl bg-brand-soft ring-1 ring-black/5 p-7 sm:p-8 shadow-sm flex flex-col h-full"
       noValidate
     >
       <h3 className="font-display text-xl font-extrabold text-brand-black">
         בקשת שובר מתנה
       </h3>
 
-      <div className="mt-5 grid gap-4">
+      <div className="mt-5 grid gap-4 flex-1">
         <div>
           <label className="block text-sm font-bold text-brand-black mb-1.5">
             איזה מסלול לכלול בשובר?
@@ -94,7 +94,7 @@ export default function VoucherForm() {
           </select>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 sm:items-end">
           <Input
             label="השם שלכם"
             name="buyerName"
@@ -113,7 +113,7 @@ export default function VoucherForm() {
           />
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 sm:items-end">
           <Input
             label="שם המקבל/ת (לא חובה)"
             name="recipientName"
