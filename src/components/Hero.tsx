@@ -22,11 +22,11 @@ export default function Hero() {
         style={{ animationDelay: "3s" }}
       />
 
-      <div className="relative max-w-5xl mx-auto px-5 sm:px-8 py-14 sm:py-20 lg:py-24">
-        <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-14">
+      <div className="relative max-w-5xl mx-auto px-5 sm:px-8 py-12 sm:py-16 lg:py-20">
+        <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-14">
 
-          {/* Vertical video — desktop only, left side */}
-          <div className="hidden lg:block shrink-0 w-52 xl:w-60">
+          {/* Vertical Short — mobile: below CTAs (order-last), desktop: left column */}
+          <div className="order-last lg:order-first shrink-0 w-[200px] sm:w-[220px] lg:w-52 xl:w-60 mx-auto lg:mx-0">
             <div className="relative aspect-[9/16] rounded-2xl overflow-hidden shadow-2xl ring-2 ring-white/20">
               <iframe
                 className="absolute inset-0 w-full h-full"
@@ -40,28 +40,28 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Text content — centred on mobile, left-aligned alongside video on desktop */}
+          {/* Text content */}
           <div className="flex-1 text-center lg:text-start">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur px-4 py-1.5 text-sm font-semibold ring-1 ring-white/20">
               🪂 בית הספר הגדול בישראל למצנחי רחיפה
             </span>
 
             <h1 className="mt-5 font-display font-extrabold tracking-tight text-3xl sm:text-4xl lg:text-5xl leading-tight">
-              טיסת מצנח רחיפה זוגית (טנדם)
+              10 דקות — ועפים מעל הים
               <br />
               <span className="bg-sky-gradient bg-clip-text text-transparent">
-                חוויה שלא תשכחו בחיים
+                החוויה שלא תשכחו בחיים 🌊
               </span>
             </h1>
 
-            <p className="mt-4 text-base sm:text-lg text-white/85 max-w-2xl lg:mx-0 mx-auto">
-              טיסה עם מדריך מקצועי · אין צורך בניסיון · נופים מטורפים
+            <p className="mt-4 text-lg sm:text-xl text-white/90 font-semibold max-w-xl lg:mx-0 mx-auto">
+              לא צריך ניסיון. רק להגיע. 😎
             </p>
-            <p className="mt-2 text-base text-white/70 max-w-2xl lg:mx-0 mx-auto">
-              המתנה היחידה שגורמת לצרוח… אבל מהתרגשות 😄
+            <p className="mt-1 text-base text-white/65 max-w-xl lg:mx-0 mx-auto">
+              טיסה עם מדריך מקצועי · נופים מטורפים · מתאים לכולם
             </p>
 
-            <div className="mt-7 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3 sm:gap-4">
+            <div className="mt-6 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3">
               <a href="#contact" className="btn-primary btn-lg w-full sm:w-auto">
                 קבעו טיסה עכשיו
               </a>
@@ -75,7 +75,12 @@ export default function Hero() {
               </a>
             </div>
 
-            <p className="mt-5 text-sm text-white/70">
+            {/* FOMO */}
+            <p className="mt-4 text-sm text-brand-yellow font-semibold">
+              📅 סופי שבוע נתפסים מהר — מספר המקומות מוגבל
+            </p>
+
+            <p className="mt-3 text-sm text-white/55">
               ♿ מתאים גם לאנשים עם מגבלויות – בתיאום מראש
             </p>
           </div>
