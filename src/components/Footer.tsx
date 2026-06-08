@@ -1,9 +1,8 @@
 import Image from "next/image";
-import { CONTACT, whatsappLink } from "@/lib/constants";
+import AffiliateWhatsAppLink from "@/components/AffiliateWhatsAppLink";
+import { CONTACT } from "@/lib/constants";
 
 export default function Footer() {
-  const wa = whatsappLink("היי 7Winds!");
-
   return (
     <footer className="bg-brand-black text-white/80">
       <div className="max-w-6xl mx-auto px-5 sm:px-8 py-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3 items-start">
@@ -41,14 +40,13 @@ export default function Footer() {
               </a>
             </li>
             <li>
-              <a
+              <AffiliateWhatsAppLink
+                message="היי 7Winds!"
+                trackLabel="footer"
                 className="hover:text-white"
-                href={wa}
-                target="_blank"
-                rel="noopener"
               >
                 💬 וואטסאפ
-              </a>
+              </AffiliateWhatsAppLink>
             </li>
             <li>אזורי פעילות: ארסוף · נתניה · רמת הגולן · גלבוע</li>
           </ul>

@@ -143,24 +143,25 @@ export default function ParagliderCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!canvasRef.current) return;
+    const el: HTMLCanvasElement = canvasRef.current;
+    const ctx2d = el.getContext("2d");
+    if (!ctx2d) return;
+    const context: CanvasRenderingContext2D = ctx2d;
 
     let rafId: number;
     let gliders: Glider[] = [];
 
     function resize() {
-      canvas.width = canvas.offsetWidth;
-      canvas.height = canvas.offsetHeight;
+      el.width = el.offsetWidth;
+      el.height = el.offsetHeight;
     }
 
     function init() {
       // 10–14 gliders; stagger their progress so the screen isn't empty at start
-      const count = Math.max(10, Math.round((canvas.width * canvas.height) / 60000));
+      const count = Math.max(10, Math.round((el.width * el.height) / 60000));
       gliders = Array.from({ length: count }, () =>
-        createGlider(canvas.width, canvas.height, true),
+        createGlider(el.width, el.height, true),
       );
     }
 
@@ -169,13 +170,13 @@ export default function ParagliderCanvas() {
       const dt = Math.min((now - prev) / 1000, 0.05);
       prev = now;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      context.clearRect(0, 0, el.width, el.height);
 
-      const W = canvas.width;
-      const H = canvas.height;
+      const W = el.width;
+      const H = el.height;
 
       for (let i = 0; i < gliders.length; i++) {
-        drawGlider(ctx, gliders[i], W, H, now / 1000);
+        drawGlider(context, gliders[i], W, H, now / 1000);
         gliders[i].t += gliders[i].speed * dt * 60;
         if (gliders[i].t >= 1) {
           gliders[i] = createGlider(W, H, false);
@@ -189,7 +190,7 @@ export default function ParagliderCanvas() {
       resize();
       init();
     });
-    ro.observe(canvas);
+    ro.observe(el);
     resize();
     init();
     rafId = requestAnimationFrame(frame);

@@ -9,6 +9,8 @@ export interface LeadDoc {
   createdAt: Date;
   userAgent?: string;
   referrer?: string;
+  affiliateId?: string;
+  affiliateCode?: string;
 }
 
 export interface VoucherDoc {
@@ -20,4 +22,6 @@ export interface VoucherDoc {
   package: "10min" | "20min" | "acro" | "golan" | "gilboa";
   notes?: string;
   createdAt: Date;
+  affiliateId?: string;
+  affiliateCode?: string;
 }

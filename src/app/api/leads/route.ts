@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
+import { resolveAffiliate, recordAffiliateEvent } from "@/lib/affiliates";
 import { leadSchema, normalizePhone } from "@/lib/validation";
 import type { LeadDoc } from "@/types/submissions";
 
@@ -23,6 +24,9 @@ export async function POST(req: Request) {
   }
 
   try {
+    const affiliateCode = parsed.data.affiliateCode || undefined;
+    const affiliate = await resolveAffiliate(affiliateCode);
+
     const db = await getDb();
     const doc: LeadDoc = {
       name: parsed.data.name,
@@ -32,8 +36,21 @@ export async function POST(req: Request) {
       createdAt: new Date(),
       userAgent: req.headers.get("user-agent") || undefined,
       referrer: req.headers.get("referer") || undefined,
+      ...(affiliate
+        ? {
+            affiliateId: String(affiliate._id),
+            affiliateCode: affiliate.code,
+          }
+        : {}),
     };
     const result = await db.collection<LeadDoc>("leads").insertOne(doc);
+
+    if (affiliate) {
+      await recordAffiliateEvent(affiliate, "lead", {
+        leadId: result.insertedId.toString(),
+      });
+    }
+
     return NextResponse.json({ ok: true, id: result.insertedId.toString() });
   } catch (err) {
     console.error("[leads] insert failed", err);

@@ -1,4 +1,4 @@
-import { whatsappLink } from "@/lib/constants";
+import AffiliateWhatsAppLink from "@/components/AffiliateWhatsAppLink";
 
 const PACKAGES = [
   {
@@ -26,7 +26,7 @@ const PACKAGES = [
   },
 ];
 
-const WA = whatsappLink("היי 7Winds! אשמח לפרטים על טיסת טנדם 🪂");
+const WA_MESSAGE = "היי 7Winds! אשמח לפרטים על טיסת טנדם 🪂";
 
 export default function Pricing() {
   return (
@@ -100,15 +100,14 @@ export default function Pricing() {
                   <a href="#contact" className="btn-primary btn-md flex-1 text-center">
                     תפסו לי מקום
                   </a>
-                  <a
-                    href={WA}
-                    target="_blank"
-                    rel="noopener"
+                  <AffiliateWhatsAppLink
+                    message={WA_MESSAGE}
+                    trackLabel="pricing"
                     className="btn-whatsapp btn-md px-4"
                     aria-label="שאלות בוואטסאפ"
                   >
                     💬
-                  </a>
+                  </AffiliateWhatsAppLink>
                 </div>
               </div>
             </article>

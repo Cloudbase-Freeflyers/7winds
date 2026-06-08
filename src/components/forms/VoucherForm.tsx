@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { track } from "@/lib/analytics";
+import { useAffiliateCode } from "@/context/AffiliateContext";
 import { VOUCHER_OCCASIONS, VOUCHER_PACKAGES } from "@/lib/constants";
 
 type State = "idle" | "submitting" | "success" | "error";
@@ -9,6 +10,7 @@ type State = "idle" | "submitting" | "success" | "error";
 export default function VoucherForm() {
   const [state, setState] = useState<State>("idle");
   const [error, setError] = useState<string | null>(null);
+  const affiliateCode = useAffiliateCode();
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -23,6 +25,7 @@ export default function VoucherForm() {
       occasion: String(fd.get("occasion") || "").trim(),
       package: String(fd.get("package") || ""),
       notes: String(fd.get("notes") || "").trim(),
+      ...(affiliateCode ? { affiliateCode } : {}),
     };
 
     try {
@@ -33,7 +36,7 @@ export default function VoucherForm() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "שליחה נכשלה. נסו שוב.");
-      track.voucher(payload.package);
+      track.voucher(payload.package, affiliateCode ?? undefined);
       setState("success");
       e.currentTarget.reset();
     } catch (err) {

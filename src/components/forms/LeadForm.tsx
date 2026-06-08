@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import { track } from "@/lib/analytics";
+import { useAffiliateCode } from "@/context/AffiliateContext";
 
 type State = "idle" | "submitting" | "success" | "error";
 
 export default function LeadForm() {
   const [state, setState] = useState<State>("idle");
   const [error, setError] = useState<string | null>(null);
+  const affiliateCode = useAffiliateCode();
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -20,6 +22,7 @@ export default function LeadForm() {
       phone: String(fd.get("phone") || "").trim(),
       message: String(fd.get("message") || "").trim(),
       source: "contact" as const,
+      ...(affiliateCode ? { affiliateCode } : {}),
     };
 
     try {
@@ -30,7 +33,7 @@ export default function LeadForm() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "שליחה נכשלה. נסו שוב.");
-      track.lead("contact");
+      track.lead("contact", affiliateCode ?? undefined);
       setState("success");
       e.currentTarget.reset();
     } catch (err) {

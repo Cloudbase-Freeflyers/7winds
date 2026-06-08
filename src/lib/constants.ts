@@ -16,8 +16,20 @@ export const CONTACT = {
 export const youtubeVideoId =
   process.env.NEXT_PUBLIC_YOUTUBE_VIDEO_ID || "nKW4Dyv_uJ4";
 
-export function whatsappLink(message: string) {
-  return `https://wa.me/${CONTACT.whatsappNumber}?text=${encodeURIComponent(message)}`;
+export function whatsappMessage(
+  message: string,
+  affiliateCode?: string | null
+): string {
+  if (!affiliateCode) return message;
+  return `${message}\n\nפנייה דרך שותף: ${affiliateCode}`;
+}
+
+export function whatsappLink(
+  message: string,
+  affiliateCode?: string | null
+) {
+  const text = whatsappMessage(message, affiliateCode);
+  return `https://wa.me/${CONTACT.whatsappNumber}?text=${encodeURIComponent(text)}`;
 }
 
 export const PRICING_LOCATIONS = [

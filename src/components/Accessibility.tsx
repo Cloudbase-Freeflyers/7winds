@@ -1,10 +1,11 @@
 import Image from "next/image";
-import { ACCESSIBILITY_BULLETS, whatsappLink } from "@/lib/constants";
+import AffiliateWhatsAppLink from "@/components/AffiliateWhatsAppLink";
+import { ACCESSIBILITY_BULLETS } from "@/lib/constants";
+
+const WA_MESSAGE =
+  "היי 7Winds! אני מתעניין/ת בטיסה מותאמת — נשמח לתיאום אישי 🙏";
 
 export default function Accessibility() {
-  const wa = whatsappLink(
-    "היי 7Winds! אני מתעניין/ת בטיסה מותאמת — נשמח לתיאום אישי 🙏"
-  );
 
   return (
     <section id="accessibility" className="section">
@@ -40,14 +41,13 @@ export default function Accessibility() {
               * בתיאום מראש בלבד, בהתאם לסוג המגבלה ותנאי השטח.
             </p>
 
-            <a
-              href={wa}
-              target="_blank"
-              rel="noopener"
+            <AffiliateWhatsAppLink
+              message={WA_MESSAGE}
+              trackLabel="accessibility"
               className="mt-5 inline-flex btn-whatsapp btn-lg"
             >
               דברו איתנו להתאמה אישית
-            </a>
+            </AffiliateWhatsAppLink>
           </div>
 
           {/* Image — side by side on desktop */}

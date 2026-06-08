@@ -20,21 +20,32 @@ function pixelEvent(name: string, params: Record<string, unknown> = {}) {
   window.fbq("track", name, params);
 }
 
+function withAffiliate(
+  params: Record<string, unknown>,
+  affiliateCode?: string
+) {
+  return affiliateCode ? { ...params, affiliate_code: affiliateCode } : params;
+}
+
 export const track = {
-  lead(source: string) {
-    gaEvent("generate_lead", { source });
-    pixelEvent("Lead", { source });
+  lead(source: string, affiliateCode?: string) {
+    const params = withAffiliate({ source }, affiliateCode);
+    gaEvent("generate_lead", params);
+    pixelEvent("Lead", params);
   },
-  voucher(pkg: string) {
-    gaEvent("purchase_intent", { item: pkg });
-    pixelEvent("InitiateCheckout", { content_name: pkg });
+  voucher(pkg: string, affiliateCode?: string) {
+    const params = withAffiliate({ item: pkg }, affiliateCode);
+    gaEvent("purchase_intent", params);
+    pixelEvent("InitiateCheckout", { content_name: pkg, ...params });
   },
-  whatsappClick(label: string) {
-    gaEvent("whatsapp_click", { label });
-    pixelEvent("Contact", { method: "whatsapp", label });
+  whatsappClick(label: string, affiliateCode?: string) {
+    const params = withAffiliate({ label }, affiliateCode);
+    gaEvent("whatsapp_click", params);
+    pixelEvent("Contact", { method: "whatsapp", ...params });
   },
-  phoneClick(label: string) {
-    gaEvent("phone_click", { label });
-    pixelEvent("Contact", { method: "phone", label });
+  phoneClick(label: string, affiliateCode?: string) {
+    const params = withAffiliate({ label }, affiliateCode);
+    gaEvent("phone_click", params);
+    pixelEvent("Contact", { method: "phone", ...params });
   },
 };

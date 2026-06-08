@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
+import { resolveAffiliate, recordAffiliateEvent } from "@/lib/affiliates";
 import { voucherSchema, normalizePhone } from "@/lib/validation";
 import type { VoucherDoc } from "@/types/submissions";
 
@@ -23,6 +24,9 @@ export async function POST(req: Request) {
   }
 
   try {
+    const affiliateCode = parsed.data.affiliateCode || undefined;
+    const affiliate = await resolveAffiliate(affiliateCode);
+
     const db = await getDb();
     const doc: VoucherDoc = {
       buyerName: parsed.data.buyerName,
@@ -32,8 +36,22 @@ export async function POST(req: Request) {
       package: parsed.data.package,
       notes: parsed.data.notes || undefined,
       createdAt: new Date(),
+      ...(affiliate
+        ? {
+            affiliateId: String(affiliate._id),
+            affiliateCode: affiliate.code,
+          }
+        : {}),
     };
     const result = await db.collection<VoucherDoc>("vouchers").insertOne(doc);
+
+    if (affiliate) {
+      await recordAffiliateEvent(affiliate, "voucher", {
+        voucherId: result.insertedId.toString(),
+        package: parsed.data.package,
+      });
+    }
+
     return NextResponse.json({ ok: true, id: result.insertedId.toString() });
   } catch (err) {
     console.error("[vouchers] insert failed", err);

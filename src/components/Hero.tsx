@@ -1,4 +1,4 @@
-import { whatsappLink } from "@/lib/constants";
+import AffiliateWhatsAppLink from "@/components/AffiliateWhatsAppLink";
 import ParagliderCanvas from "@/components/ParagliderCanvas";
 
 const SHORT_ID = "66a3M3_L1ps";
@@ -62,14 +62,13 @@ export default function Hero() {
               <a href="#contact" className="btn-primary btn-lg w-full sm:w-auto text-center">
                 קבעו טיסה עכשיו
               </a>
-              <a
-                href={whatsappLink(waMessage)}
-                target="_blank"
-                rel="noopener"
+              <AffiliateWhatsAppLink
+                message={waMessage}
+                trackLabel="hero"
                 className="btn-whatsapp btn-lg w-full sm:w-auto text-center"
               >
                 💬 שלחו הודעה בוואטסאפ
-              </a>
+              </AffiliateWhatsAppLink>
             </div>
 
             {/* FOMO */}
