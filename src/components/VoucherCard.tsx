@@ -27,9 +27,6 @@ export default function VoucherCard() {
           }}
         />
 
-        {/* Clouds */}
-        <CloudLayer />
-
         {/* Tandem photo */}
         <Image
           src={V2_IMAGES.tandemOverWater}
@@ -49,14 +46,10 @@ export default function VoucherCard() {
         {/* Sparkles */}
         <Sparkles />
 
-        {/* Hot air balloons */}
-        <Balloon className="absolute top-[18%] end-[12%] w-7 h-9 opacity-90" colors={["#e85d04", "#f48c06"]} />
-        <Balloon className="absolute top-[32%] end-[6%] w-5 h-7 opacity-80" colors={["#ffd60a", "#ffc300"]} />
-
         {/* Top ribbon banner */}
         <RibbonBanner text="טיסת חוויה במצנח רחיפה" />
 
-        {/* Gift tag — top right */}
+        {/* Gift tag — top left */}
         <GiftTag />
 
         {/* Bottom strip */}
@@ -117,27 +110,23 @@ function RibbonBanner({ text }: { text: string }) {
 function GiftTag() {
   return (
     <div
-      className="absolute top-2 end-3 z-30 flex flex-col items-center"
-      style={{ transform: "rotate(4deg)" }}
+      className="absolute top-2 left-2 z-30 flex flex-col items-center"
+      style={{ transform: "rotate(-6deg)" }}
     >
-      <GoldBow className="w-7 h-7 -mb-2 z-10 drop-shadow" />
+      <GoldBow className="w-5 h-5 -mb-1.5 z-10 drop-shadow" />
       <div
-        className="relative px-4 py-2.5 pt-3 rounded-lg shadow-xl text-center min-w-[88px]"
+        className="relative px-2.5 py-1 pt-2 rounded-md shadow-lg text-center"
         style={{
           background: "linear-gradient(180deg, #ffffff 0%, #f8fbff 100%)",
-          border: "2.5px solid #1ABBEF",
-          boxShadow: "0 6px 20px rgba(0,0,0,0.18)",
+          border: "2px solid #1ABBEF",
+          boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
         }}
       >
-        <p className="font-display font-extrabold text-brand-sky text-sm leading-tight">
-          שובר
+        <p className="font-display font-extrabold text-brand-sky text-[11px] leading-tight whitespace-nowrap">
+          שובר מתנה
         </p>
-        <p className="font-display font-extrabold text-brand-sky text-sm leading-tight">
-          מתנה
-        </p>
-        {/* Tag hole */}
         <div
-          className="absolute -top-1 start-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-sky-100 ring-2 ring-brand-sky/40"
+          className="absolute -top-0.5 start-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-sky-100 ring-1 ring-brand-sky/40"
           aria-hidden
         />
       </div>
@@ -183,30 +172,6 @@ function WindsLogo() {
   );
 }
 
-function CloudLayer() {
-  return (
-    <div className="absolute inset-0 z-10 pointer-events-none overflow-hidden" aria-hidden>
-      <Cloud className="top-[8%] start-[5%] w-28 opacity-80" />
-      <Cloud className="top-[5%] start-[35%] w-36 opacity-70" />
-      <Cloud className="top-[12%] end-[20%] w-24 opacity-60" />
-      <Cloud className="bottom-[28%] start-[10%] w-32 opacity-50" />
-      <Cloud className="bottom-[22%] end-[8%] w-40 opacity-55" />
-    </div>
-  );
-}
-
-function Cloud({ className = "" }: { className?: string }) {
-  return (
-    <div className={`absolute ${className}`}>
-      <div className="relative">
-        <div className="w-full aspect-[2/1] rounded-full bg-white/85 blur-[1px]" />
-        <div className="absolute -top-[30%] start-[15%] w-[45%] aspect-square rounded-full bg-white/90" />
-        <div className="absolute -top-[20%] end-[10%] w-[35%] aspect-square rounded-full bg-white/85" />
-      </div>
-    </div>
-  );
-}
-
 function Sparkles() {
   const stars = [
     { top: "14%", start: "22%", size: 14 },
@@ -234,28 +199,5 @@ function Sparkles() {
         </svg>
       ))}
     </>
-  );
-}
-
-function Balloon({
-  className = "",
-  colors,
-}: {
-  className?: string;
-  colors: [string, string];
-}) {
-  return (
-    <svg viewBox="0 0 40 52" className={className} aria-hidden>
-      <defs>
-        <linearGradient id={`balloon-${colors[0]}`} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={colors[0]} />
-          <stop offset="100%" stopColor={colors[1]} />
-        </linearGradient>
-      </defs>
-      <ellipse cx="20" cy="18" rx="14" ry="17" fill={`url(#balloon-${colors[0]})`} />
-      <ellipse cx="16" cy="14" rx="4" ry="6" fill="white" opacity="0.25" />
-      <path d="M20 35 L20 46" stroke="#666" strokeWidth="1" />
-      <rect x="16" y="46" width="8" height="5" rx="1" fill="#8B6914" />
-    </svg>
   );
 }

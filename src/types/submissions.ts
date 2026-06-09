@@ -23,7 +23,7 @@ export interface VoucherDoc {
   buyerEmail?: string;
   recipientName?: string;
   occasion?: string;
-  package: "10min" | "20min" | "acro" | "golan" | "gilboa";
+  package: "10min" | "20min" | "acro" | "golan" | "gilboa" | "media";
   notes?: string;
   orderType?: "voucher" | "direct";
   amount?: number;

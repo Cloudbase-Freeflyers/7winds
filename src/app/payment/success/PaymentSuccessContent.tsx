@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { track } from "@/lib/analytics";
-import { VOUCHER_PACKAGES } from "@/lib/constants";
+import { PACKAGE_LABELS } from "@/lib/constants";
 
 type OrderInfo = {
   id: string;
@@ -57,7 +57,7 @@ export default function PaymentSuccessContent() {
   }, [orderId]);
 
   const pkgLabel =
-    VOUCHER_PACKAGES.find((p) => p.value === order?.package)?.label ??
+    (order?.package && PACKAGE_LABELS[order.package as keyof typeof PACKAGE_LABELS]) ??
     order?.package;
 
   return (

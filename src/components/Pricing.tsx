@@ -1,11 +1,11 @@
 import AffiliateWhatsAppLink from "@/components/AffiliateWhatsAppLink";
 import PayCheckoutModal from "@/components/PayCheckoutModal";
-import type { VoucherPackage } from "@/lib/constants";
+import type { ProductPackage } from "@/lib/constants";
 
 type PayableItem = {
   label: string;
   price: string;
-  packageKey?: VoucherPackage;
+  packageKey?: ProductPackage;
 };
 
 const PACKAGES = [
@@ -17,7 +17,7 @@ const PACKAGES = [
       { label: "10 דקות", price: "₪300", packageKey: "10min" as const },
       { label: "20 דקות", price: "₪450", packageKey: "20min" as const },
       { label: "אקרובטיקה עם פעלולים 🔥", price: "₪500", packageKey: "acro" as const },
-      { label: "תוספת צילום וידאו / תמונות 📸", price: "+₪150" },
+      { label: "תוספת צילום וידאו / תמונות 📸", price: "+₪150", packageKey: "media" as const },
     ] satisfies PayableItem[],
     perks: ["מתאים גם כמתנה", "אין צורך בניסיון", "מדריך צמוד"],
     highlight: false,
@@ -79,15 +79,22 @@ export default function Pricing() {
 
                 <ul className={`divide-y ${pkg.highlight ? "divide-white/10" : "divide-black/5"}`}>
                   {pkg.items.map((item) => (
-                    <li key={item.label} className="flex items-center justify-between gap-3 py-3">
-                      <span className={`text-sm flex-1 ${pkg.highlight ? "text-white/80" : "text-brand-dark"}`}>
+                    <li
+                      key={item.label}
+                      className="grid grid-cols-[1fr_auto_2.25rem] items-center gap-x-2 py-3"
+                    >
+                      <span className={`text-sm min-w-0 ${pkg.highlight ? "text-white/80" : "text-brand-dark"}`}>
                         {item.label}
                       </span>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className={`font-extrabold text-lg ${pkg.highlight ? "text-brand-yellow" : "text-brand-black"}`}>
-                          {item.price}
-                        </span>
-                        {item.packageKey && (
+                      <span
+                        className={`font-extrabold text-lg tabular-nums text-end whitespace-nowrap ${
+                          pkg.highlight ? "text-brand-yellow" : "text-brand-black"
+                        }`}
+                      >
+                        {item.price}
+                      </span>
+                      <div className="flex items-center justify-center">
+                        {item.packageKey ? (
                           <PayCheckoutModal
                             packageKey={item.packageKey}
                             label="💳"
@@ -98,7 +105,7 @@ export default function Pricing() {
                             }`}
                             orderType="direct"
                           />
-                        )}
+                        ) : null}
                       </div>
                     </li>
                   ))}

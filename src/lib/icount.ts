@@ -2,7 +2,7 @@ import { BRAND } from "@/lib/constants";
 import {
   PACKAGE_INVOICE_DESCRIPTIONS,
   PACKAGE_PRICES,
-  type VoucherPackage,
+  type ProductPackage,
 } from "@/lib/constants";
 
 export function getPayPageUrl(): string {
@@ -17,11 +17,11 @@ export function getSiteBaseUrl(): string {
   return (process.env.NEXT_PUBLIC_SITE_URL || BRAND.url).replace(/\/$/, "");
 }
 
-export function getPackagePrice(pkg: VoucherPackage): number {
+export function getPackagePrice(pkg: ProductPackage): number {
   return PACKAGE_PRICES[pkg];
 }
 
-export function getPackageDescription(pkg: VoucherPackage): string {
+export function getPackageDescription(pkg: ProductPackage): string {
   return PACKAGE_INVOICE_DESCRIPTIONS[pkg];
 }
 

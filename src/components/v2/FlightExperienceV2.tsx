@@ -1,5 +1,5 @@
-import Image from "next/image";
-import { FLIGHT_STEPS, FLIGHT_FEATURES, V2_IMAGES } from "@/lib/constants";
+import { FLIGHT_STEPS, FLIGHT_FEATURES, HERO_FILM_VIDEO_ID } from "@/lib/constants";
+import YouTubeEmbed from "@/components/v2/YouTubeEmbed";
 
 export default function FlightExperienceV2() {
   return (
@@ -40,14 +40,16 @@ export default function FlightExperienceV2() {
           ))}
         </div>
 
-        <div className="mt-10 relative rounded-3xl overflow-hidden aspect-[21/9] shadow-xl ring-1 ring-black/5">
-          <Image
-            src={V2_IMAGES.tandemOverWater}
-            alt="טיסת מצנח רחיפה מעל חוף הים עם 7Winds"
-            fill
-            className="object-cover object-[35%_center]"
-            sizes="(max-width: 768px) 100vw, 900px"
-          />
+        <div className="mt-10 max-w-4xl mx-auto">
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl ring-2 ring-brand-sky/25 bg-black">
+            <div className="absolute inset-x-0 top-0 h-1 bg-sky-gradient z-10" aria-hidden />
+            <div className="relative aspect-video">
+              <YouTubeEmbed videoId={HERO_FILM_VIDEO_ID} />
+            </div>
+          </div>
+          <p className="mt-3 text-center text-sm font-medium text-brand-dark">
+            ▶ צפו בסרטון — טיסת חוויה עם 7Winds
+          </p>
         </div>
       </div>
     </section>

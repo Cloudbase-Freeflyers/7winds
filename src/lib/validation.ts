@@ -23,7 +23,7 @@ export const voucherSchema = z.object({
     .regex(phoneRegex, "מספר טלפון לא תקין"),
   recipientName: z.string().trim().max(80).optional().or(z.literal("")),
   occasion: z.string().trim().max(80).optional().or(z.literal("")),
-  package: z.enum(["10min", "20min", "acro", "golan", "gilboa"]),
+  package: z.enum(["10min", "20min", "acro", "golan", "gilboa", "media"]),
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
   affiliateCode: z.string().trim().max(40).optional().or(z.literal("")),
 });
@@ -38,7 +38,7 @@ const emailSchema = z
 
 export const checkoutSchema = z.object({
   type: z.enum(["voucher", "direct"]),
-  package: z.enum(["10min", "20min", "acro", "golan", "gilboa"]),
+  package: z.enum(["10min", "20min", "acro", "golan", "gilboa", "media"]),
   buyerName: z.string().trim().min(2, "נא להזין שם מלא").max(80),
   buyerPhone: z
     .string()

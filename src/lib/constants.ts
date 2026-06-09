@@ -19,10 +19,19 @@ export const youtubeVideoId =
 /** Client-approved hero + explainer film (v2) */
 export const HERO_FILM_VIDEO_ID = "4VjdoHoQMmE";
 
+export function youtubeThumbnail(
+  videoId: string,
+  quality: "maxres" | "hq" = "maxres"
+) {
+  const file = quality === "maxres" ? "maxresdefault" : "hqdefault";
+  return `https://i.ytimg.com/vi/${videoId}/${file}.jpg`;
+}
+
 export const V2_IMAGES = {
   tandemOverWater: "/images/v2/tandem-hero-bg.png",
   tandemSeaVertical: "/images/v2/tandem-sea-vertical.png",
   fieldFlight: "/images/v2/field-flight-bg.png",
+  fieldFlightVertical: "/images/v2/field-flight-vertical.png",
 } as const;
 
 export function whatsappMessage(
@@ -75,20 +84,34 @@ export const VOUCHER_PACKAGES = [
 
 export type VoucherPackage = (typeof VOUCHER_PACKAGES)[number]["value"];
 
-export const PACKAGE_PRICES: Record<VoucherPackage, number> = {
+/** Direct-checkout packages (flights + add-ons) */
+export type ProductPackage = VoucherPackage | "media";
+
+export const PACKAGE_PRICES: Record<ProductPackage, number> = {
   "10min": 300,
   "20min": 450,
   acro: 500,
   golan: 750,
   gilboa: 750,
+  media: 150,
 };
 
-export const PACKAGE_INVOICE_DESCRIPTIONS: Record<VoucherPackage, string> = {
+export const PACKAGE_INVOICE_DESCRIPTIONS: Record<ProductPackage, string> = {
   "10min": "שובר מתנה — 10 דקות ארסוף/נתניה — 7Winds",
   "20min": "שובר מתנה — 20 דקות ארסוף/נתניה — 7Winds",
   acro: "שובר מתנה — אקרובטיקה ארסוף/נתניה — 7Winds",
   golan: "שובר מתנה — טיסת טנדם רמת הגולן — 7Winds",
   gilboa: "שובר מתנה — טיסת טנדם גלבוע — 7Winds",
+  media: "תוספת צילום וידאו / תמונות — 7Winds",
+};
+
+export const PACKAGE_LABELS: Record<ProductPackage, string> = {
+  "10min": "10 דקות בארסוף / נתניה — ₪300",
+  "20min": "20 דקות בארסוף / נתניה — ₪450",
+  acro: "אקרובטיקה עם פעלולים — ₪500",
+  golan: "טיסת טנדם — רמת הגולן — ₪750",
+  gilboa: "טיסת טנדם — גלבוע — ₪750",
+  media: "תוספת צילום וידאו / תמונות — ₪150",
 };
 
 export const VOUCHER_OCCASIONS = [

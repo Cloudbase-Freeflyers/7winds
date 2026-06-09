@@ -3,16 +3,16 @@
 import { useState } from "react";
 import { track } from "@/lib/analytics";
 import {
+  PACKAGE_LABELS,
   PACKAGE_PRICES,
-  VOUCHER_PACKAGES,
-  type VoucherPackage,
+  type ProductPackage,
 } from "@/lib/constants";
 import { useAffiliateCode } from "@/context/AffiliateContext";
 
 type State = "idle" | "submitting" | "error";
 
 type Props = {
-  packageKey: VoucherPackage;
+  packageKey: ProductPackage;
   label?: string;
   className?: string;
   orderType?: "voucher" | "direct";
@@ -29,7 +29,7 @@ export default function PayCheckoutModal({
   const [error, setError] = useState<string | null>(null);
   const affiliateCode = useAffiliateCode();
 
-  const pkg = VOUCHER_PACKAGES.find((p) => p.value === packageKey);
+  const pkgLabel = PACKAGE_LABELS[packageKey];
   const amount = PACKAGE_PRICES[packageKey];
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -86,7 +86,7 @@ export default function PayCheckoutModal({
                   המשך לתשלום מאובטח
                 </h3>
                 <p className="mt-1 text-sm text-brand-dark">
-                  {pkg?.label ?? packageKey} · ₪{amount}
+                  {pkgLabel} · ₪{amount}
                 </p>
               </div>
               <button

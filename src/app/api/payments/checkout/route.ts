@@ -29,12 +29,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: first }, { status: 400 });
   }
 
+  if (!process.env.ICOUNT_PAYPAGE_URL?.trim()) {
+    console.error("[payments/checkout] ICOUNT_PAYPAGE_URL is not configured");
+    return NextResponse.json(
+      { ok: false, error: "תשלום לא זמין כרגע. נסו שוב מאוחר יותר." },
+      { status: 503 }
+    );
+  }
+
   try {
     const affiliateCode = parsed.data.affiliateCode || undefined;
     const affiliate = await resolveAffiliate(affiliateCode);
     const orderId = randomUUID();
     const amount = getPackagePrice(parsed.data.package);
     const description = getPackageDescription(parsed.data.package);
+
+    const redirectUrl = buildCheckoutRedirectUrl({
+      orderId,
+      amount,
+      description,
+      buyerName: parsed.data.buyerName,
+      buyerPhone: normalizePhone(parsed.data.buyerPhone),
+      buyerEmail: parsed.data.buyerEmail,
+      affiliateCode: affiliate?.code,
+      orderType: parsed.data.type,
+    });
 
     const db = await getDb();
     const doc: VoucherDoc = {
@@ -63,24 +82,12 @@ export async function POST(req: Request) {
       .collection("vouchers")
       .createIndex({ orderId: 1 }, { unique: true, sparse: true });
 
-    const redirectUrl = buildCheckoutRedirectUrl({
-      orderId,
-      amount,
-      description,
-      buyerName: parsed.data.buyerName,
-      buyerPhone: normalizePhone(parsed.data.buyerPhone),
-      buyerEmail: parsed.data.buyerEmail,
-      affiliateCode: affiliate?.code,
-      orderType: parsed.data.type,
-    });
-
     return NextResponse.json({ ok: true, orderId, redirectUrl, id: result.insertedId.toString() });
   } catch (err) {
     console.error("[payments/checkout]", err);
-    const message =
-      err instanceof Error && err.message.includes("ICOUNT_PAYPAGE_URL")
-        ? "תשלום לא זמין כרגע. נסו שוב מאוחר יותר."
-        : "שמירה נכשלה. נסו שוב.";
-    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+    return NextResponse.json(
+      { ok: false, error: "שמירה נכשלה. נסו שוב." },
+      { status: 500 }
+    );
   }
 }
