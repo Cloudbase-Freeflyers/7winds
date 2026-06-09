@@ -5,7 +5,7 @@ import { track } from "@/lib/analytics";
 import { useAffiliateCode } from "@/context/AffiliateContext";
 import { VOUCHER_OCCASIONS, VOUCHER_PACKAGES } from "@/lib/constants";
 
-type State = "idle" | "submitting" | "success" | "error";
+type State = "idle" | "submitting" | "error";
 
 export default function VoucherForm() {
   const [state, setState] = useState<State>("idle");
@@ -19,8 +19,10 @@ export default function VoucherForm() {
 
     const fd = new FormData(e.currentTarget);
     const payload = {
+      type: "voucher" as const,
       buyerName: String(fd.get("buyerName") || "").trim(),
       buyerPhone: String(fd.get("buyerPhone") || "").trim(),
+      buyerEmail: String(fd.get("buyerEmail") || "").trim(),
       recipientName: String(fd.get("recipientName") || "").trim(),
       occasion: String(fd.get("occasion") || "").trim(),
       package: String(fd.get("package") || ""),
@@ -29,7 +31,7 @@ export default function VoucherForm() {
     };
 
     try {
-      const res = await fetch("/api/vouchers", {
+      const res = await fetch("/api/payments/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -37,32 +39,11 @@ export default function VoucherForm() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "שליחה נכשלה. נסו שוב.");
       track.voucher(payload.package, affiliateCode ?? undefined);
-      setState("success");
-      e.currentTarget.reset();
+      window.location.href = data.redirectUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "שגיאה לא צפויה");
       setState("error");
     }
-  }
-
-  if (state === "success") {
-    return (
-      <div className="rounded-3xl bg-brand-soft ring-1 ring-black/5 p-8 text-center">
-        <div className="text-5xl">🎁</div>
-        <h3 className="mt-4 font-display text-2xl font-extrabold text-brand-black">
-          קיבלנו את בקשת השובר!
-        </h3>
-        <p className="mt-2 text-brand-dark">
-          ניצור איתכם קשר לאישור פרטי התשלום ושליחת השובר.
-        </p>
-        <button
-          onClick={() => setState("idle")}
-          className="mt-6 btn-secondary btn-md"
-        >
-          להזמין שובר נוסף
-        </button>
-      </div>
-    );
   }
 
   return (
@@ -72,7 +53,7 @@ export default function VoucherForm() {
       noValidate
     >
       <h3 className="font-display text-xl font-extrabold text-brand-black">
-        בקשת שובר מתנה
+        רכישת שובר מתנה
       </h3>
 
       <div className="mt-5 grid gap-4 flex-1">
@@ -115,6 +96,15 @@ export default function VoucherForm() {
             placeholder="050-0000000"
           />
         </div>
+
+        <Input
+          label="אימייל (לקבלה)"
+          name="buyerEmail"
+          type="email"
+          required
+          autoComplete="email"
+          placeholder="you@example.com"
+        />
 
         <div className="grid gap-4 sm:grid-cols-2 sm:items-end">
           <Input
@@ -166,7 +156,7 @@ export default function VoucherForm() {
         disabled={state === "submitting"}
         className="mt-6 btn-secondary btn-lg w-full"
       >
-        {state === "submitting" ? "שולח…" : "קנה שובר מתנה 🎁"}
+        {state === "submitting" ? "מעביר לתשלום…" : "המשך לתשלום מאובטח 🎁"}
       </button>
     </form>
   );

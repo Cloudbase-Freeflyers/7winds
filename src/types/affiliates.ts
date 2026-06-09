@@ -37,6 +37,7 @@ export interface AffiliateEventDoc {
     voucherId?: string;
     package?: string;
     label?: string;
+    paid?: boolean;
   };
   createdAt: Date;
 }

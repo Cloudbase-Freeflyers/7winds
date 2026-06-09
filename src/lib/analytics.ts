@@ -38,6 +38,11 @@ export const track = {
     gaEvent("purchase_intent", params);
     pixelEvent("InitiateCheckout", { content_name: pkg, ...params });
   },
+  purchase(pkg: string, amount?: number) {
+    const params = { item: pkg, ...(amount ? { value: amount, currency: "ILS" } : {}) };
+    gaEvent("purchase", params);
+    pixelEvent("Purchase", params);
+  },
   whatsappClick(label: string, affiliateCode?: string) {
     const params = withAffiliate({ label }, affiliateCode);
     gaEvent("whatsapp_click", params);

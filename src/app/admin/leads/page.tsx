@@ -123,9 +123,10 @@ export default async function AdminLeadsPage() {
                   <Th>תאריך</Th>
                   <Th>קונה</Th>
                   <Th>טלפון</Th>
+                  <Th>מסלול</Th>
+                  <Th>תשלום</Th>
                   <Th>מקבל</Th>
                   <Th>אירוע</Th>
-                  <Th>מסלול</Th>
                   <Th>הערות</Th>
                   <Th>שותף</Th>
                 </tr>
@@ -133,7 +134,7 @@ export default async function AdminLeadsPage() {
               <tbody>
                 {vouchers.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-4 py-6 text-center text-brand-dark">
+                    <td colSpan={9} className="px-4 py-6 text-center text-brand-dark">
                       אין בקשות שובר עדיין
                     </td>
                   </tr>
@@ -143,9 +144,10 @@ export default async function AdminLeadsPage() {
                     <Td>{formatDate(v.createdAt)}</Td>
                     <Td>{v.buyerName}</Td>
                     <Td dir="ltr">{v.buyerPhone}</Td>
+                    <Td>{v.package}</Td>
+                    <Td>{paymentLabel(v.paymentStatus)}</Td>
                     <Td>{v.recipientName || "—"}</Td>
                     <Td>{v.occasion || "—"}</Td>
-                    <Td>{v.package}</Td>
                     <Td>{v.notes || "—"}</Td>
                     <Td dir="ltr">{v.affiliateCode || "—"}</Td>
                   </tr>
@@ -173,6 +175,21 @@ function Td({ children, ...rest }: React.TdHTMLAttributes<HTMLTableCellElement>)
       {children}
     </td>
   );
+}
+
+function paymentLabel(status?: string) {
+  switch (status) {
+    case "paid":
+      return "✅ שולם";
+    case "pending":
+      return "⏳ ממתין";
+    case "failed":
+      return "❌ נכשל";
+    case "cancelled":
+      return "↩️ בוטל";
+    default:
+      return "בקשה (ללא תשלום)";
+  }
 }
 
 function formatDate(d: Date | string) {

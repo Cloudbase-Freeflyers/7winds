@@ -13,7 +13,7 @@ export default function HeroV2() {
         alt=""
         fill
         priority
-        className="object-cover object-center"
+        className="object-cover object-[42%_38%] sm:object-[38%_40%] lg:object-[32%_center]"
         sizes="100vw"
       />
 

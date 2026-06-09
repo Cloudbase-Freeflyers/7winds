@@ -21,7 +21,7 @@ export default function VideoSectionV2() {
               src={V2_IMAGES.tandemOverWater}
               alt="טיסת מצנח רחיפה מעל הים — 7Winds"
               fill
-              className="object-cover object-center"
+              className="object-cover object-[28%_35%]"
               sizes="33vw"
             />
           </div>

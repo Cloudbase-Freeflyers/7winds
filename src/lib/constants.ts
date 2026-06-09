@@ -20,7 +20,7 @@ export const youtubeVideoId =
 export const HERO_FILM_VIDEO_ID = "4VjdoHoQMmE";
 
 export const V2_IMAGES = {
-  tandemOverWater: "/images/v2/tandem-over-water.jpeg",
+  tandemOverWater: "/images/v2/tandem-hero-bg.png",
   fieldFlight: "/images/v2/field-flight.jpeg",
 } as const;
 
@@ -73,6 +73,22 @@ export const VOUCHER_PACKAGES = [
 ] as const;
 
 export type VoucherPackage = (typeof VOUCHER_PACKAGES)[number]["value"];
+
+export const PACKAGE_PRICES: Record<VoucherPackage, number> = {
+  "10min": 300,
+  "20min": 450,
+  acro: 500,
+  golan: 750,
+  gilboa: 750,
+};
+
+export const PACKAGE_INVOICE_DESCRIPTIONS: Record<VoucherPackage, string> = {
+  "10min": "שובר מתנה — 10 דקות ארסוף/נתניה — 7Winds",
+  "20min": "שובר מתנה — 20 דקות ארסוף/נתניה — 7Winds",
+  acro: "שובר מתנה — אקרובטיקה ארסוף/נתניה — 7Winds",
+  golan: "שובר מתנה — טיסת טנדם רמת הגולן — 7Winds",
+  gilboa: "שובר מתנה — טיסת טנדם גלבוע — 7Winds",
+};
 
 export const VOUCHER_OCCASIONS = [
   "יום הולדת",

@@ -30,6 +30,29 @@ export const voucherSchema = z.object({
 
 export type VoucherInput = z.infer<typeof voucherSchema>;
 
+const emailSchema = z
+  .string()
+  .trim()
+  .email("כתובת אימייל לא תקינה")
+  .max(120);
+
+export const checkoutSchema = z.object({
+  type: z.enum(["voucher", "direct"]),
+  package: z.enum(["10min", "20min", "acro", "golan", "gilboa"]),
+  buyerName: z.string().trim().min(2, "נא להזין שם מלא").max(80),
+  buyerPhone: z
+    .string()
+    .trim()
+    .regex(phoneRegex, "מספר טלפון לא תקין"),
+  buyerEmail: emailSchema,
+  recipientName: z.string().trim().max(80).optional().or(z.literal("")),
+  occasion: z.string().trim().max(80).optional().or(z.literal("")),
+  notes: z.string().trim().max(1000).optional().or(z.literal("")),
+  affiliateCode: z.string().trim().max(40).optional().or(z.literal("")),
+});
+
+export type CheckoutInput = z.infer<typeof checkoutSchema>;
+
 export function normalizePhone(raw: string) {
   return raw.replace(/[^\d+]/g, "");
 }

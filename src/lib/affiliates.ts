@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import { affiliateUrl, slugifyCode } from "@/lib/affiliate-utils";
 import { getDb } from "@/lib/mongodb";
-import type { VoucherPackage } from "@/lib/constants";
+import { PACKAGE_PRICES, type VoucherPackage } from "@/lib/constants";
 import type {
   AffiliateDoc,
   AffiliateEventDoc,
@@ -10,14 +10,6 @@ import type {
 } from "@/types/affiliates";
 
 export { affiliateUrl, slugifyCode };
-
-const PACKAGE_PRICES: Record<VoucherPackage, number> = {
-  "10min": 300,
-  "20min": 450,
-  acro: 500,
-  golan: 750,
-  gilboa: 750,
-};
 
 const DEFAULT_LEAD_VALUE = 400;
 

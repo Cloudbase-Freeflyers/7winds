@@ -45,7 +45,7 @@ export default function FlightExperienceV2() {
             src={V2_IMAGES.tandemOverWater}
             alt="טיסת מצנח רחיפה מעל חוף הים עם 7Winds"
             fill
-            className="object-cover"
+            className="object-cover object-[35%_center]"
             sizes="(max-width: 768px) 100vw, 900px"
           />
         </div>

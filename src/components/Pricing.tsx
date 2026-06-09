@@ -1,4 +1,12 @@
 import AffiliateWhatsAppLink from "@/components/AffiliateWhatsAppLink";
+import PayCheckoutModal from "@/components/PayCheckoutModal";
+import type { VoucherPackage } from "@/lib/constants";
+
+type PayableItem = {
+  label: string;
+  price: string;
+  packageKey?: VoucherPackage;
+};
 
 const PACKAGES = [
   {
@@ -6,11 +14,11 @@ const PACKAGES = [
     title: "טיסת חוויה מעל הים",
     subtitle: "ארסוף / נתניה",
     items: [
-      { label: "10 דקות", price: "₪300" },
-      { label: "20 דקות", price: "₪450" },
-      { label: "אקרובטיקה עם פעלולים 🔥", price: "₪500" },
+      { label: "10 דקות", price: "₪300", packageKey: "10min" as const },
+      { label: "20 דקות", price: "₪450", packageKey: "20min" as const },
+      { label: "אקרובטיקה עם פעלולים 🔥", price: "₪500", packageKey: "acro" as const },
       { label: "תוספת צילום וידאו / תמונות 📸", price: "+₪150" },
-    ],
+    ] satisfies PayableItem[],
     perks: ["מתאים גם כמתנה", "אין צורך בניסיון", "מדריך צמוד"],
     highlight: false,
   },
@@ -19,8 +27,9 @@ const PACKAGES = [
     title: "טיסות בצפון",
     subtitle: "רמת הגולן / גלבוע",
     items: [
-      { label: "טיסת טנדם", price: "₪750" },
-    ],
+      { label: "טיסת טנדם — גולן", price: "₪750", packageKey: "golan" as const },
+      { label: "טיסת טנדם — גלבוע", price: "₪750", packageKey: "gilboa" as const },
+    ] satisfies PayableItem[],
     perks: ["נוף עמק יזרעאל ורמת הגולן", "גובה טיסה מרשים", "חוויה שונה לגמרי"],
     highlight: true,
   },
@@ -70,13 +79,27 @@ export default function Pricing() {
 
                 <ul className={`divide-y ${pkg.highlight ? "divide-white/10" : "divide-black/5"}`}>
                   {pkg.items.map((item) => (
-                    <li key={item.label} className="flex items-center justify-between py-3">
-                      <span className={`text-sm ${pkg.highlight ? "text-white/80" : "text-brand-dark"}`}>
+                    <li key={item.label} className="flex items-center justify-between gap-3 py-3">
+                      <span className={`text-sm flex-1 ${pkg.highlight ? "text-white/80" : "text-brand-dark"}`}>
                         {item.label}
                       </span>
-                      <span className={`font-extrabold text-lg ${pkg.highlight ? "text-brand-yellow" : "text-brand-black"}`}>
-                        {item.price}
-                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`font-extrabold text-lg ${pkg.highlight ? "text-brand-yellow" : "text-brand-black"}`}>
+                          {item.price}
+                        </span>
+                        {item.packageKey && (
+                          <PayCheckoutModal
+                            packageKey={item.packageKey}
+                            label="💳"
+                            className={`rounded-full px-2.5 py-1 text-xs font-bold transition ${
+                              pkg.highlight
+                                ? "bg-white/15 text-white hover:bg-white/25"
+                                : "bg-brand-sky/10 text-brand-sky hover:bg-brand-sky/20"
+                            }`}
+                            orderType="direct"
+                          />
+                        )}
+                      </div>
                     </li>
                   ))}
                 </ul>
