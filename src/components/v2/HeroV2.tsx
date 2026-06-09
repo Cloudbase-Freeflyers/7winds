@@ -1,26 +1,32 @@
+import Image from "next/image";
 import AffiliateWhatsAppLink from "@/components/AffiliateWhatsAppLink";
-import ParagliderCanvas from "@/components/ParagliderCanvas";
 import HeroPhoneVideo from "@/components/v2/HeroPhoneVideo";
-import { HERO_FILM_VIDEO_ID } from "@/lib/constants";
+import { HERO_FILM_VIDEO_ID, V2_IMAGES } from "@/lib/constants";
 
 const waMessage = "היי 7Winds! אשמח לפרטים על טיסת טנדם 🪂";
 
 export default function HeroV2() {
   return (
-    <section
-      id="top"
-      className="relative isolate overflow-hidden text-white"
-      style={{
-        background:
-          "linear-gradient(155deg, #021929 0%, #043d6b 40%, #0762a0 70%, #0e8fc7 100%)",
-      }}
-    >
-      <ParagliderCanvas />
+    <section id="top" className="relative isolate overflow-hidden text-white">
+      <Image
+        src={V2_IMAGES.tandemOverWater}
+        alt=""
+        fill
+        priority
+        className="object-cover object-center"
+        sizes="100vw"
+      />
 
-      <div className="absolute -top-32 -start-32 w-[500px] h-[500px] rounded-full opacity-20 blur-3xl pointer-events-none"
-        style={{ background: "radial-gradient(circle, #38bdf8, transparent 70%)" }} />
-      <div className="absolute -bottom-24 -end-24 w-[400px] h-[400px] rounded-full opacity-15 blur-3xl pointer-events-none"
-        style={{ background: "radial-gradient(circle, #0ea5e9, transparent 70%)" }} />
+      {/* Darken text side (start/right in RTL) for readability */}
+      <div className="absolute inset-0 bg-[#021929]/45" aria-hidden />
+      <div
+        className="absolute inset-0 bg-gradient-to-e from-[#021929]/92 via-[#021929]/70 to-[#021929]/25"
+        aria-hidden
+      />
+      <div
+        className="absolute inset-0 bg-gradient-to-t from-[#021929]/60 via-transparent to-[#021929]/20"
+        aria-hidden
+      />
 
       <div className="relative max-w-5xl mx-auto px-5 sm:px-8 py-14 sm:py-18 lg:py-24">
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
@@ -30,7 +36,7 @@ export default function HeroV2() {
               🪂 בית הספר הגדול בישראל למצנחי רחיפה
             </span>
 
-            <h1 className="mt-5 font-display font-extrabold tracking-tight text-4xl sm:text-5xl lg:text-6xl leading-[1.1]">
+            <h1 className="mt-5 font-display font-extrabold tracking-tight text-4xl sm:text-5xl lg:text-6xl leading-[1.1] drop-shadow-sm">
               10 דקות —
               <br />
               ועפים מעל הים
@@ -43,10 +49,10 @@ export default function HeroV2() {
               </span>
             </h1>
 
-            <p className="mt-5 text-xl text-white/85 font-semibold max-w-md lg:mx-0 mx-auto">
+            <p className="mt-5 text-xl text-white/90 font-semibold max-w-md lg:mx-0 mx-auto drop-shadow-sm">
               לא צריך ניסיון. רק להגיע. 😎
             </p>
-            <p className="mt-1.5 text-base text-white/55 max-w-md lg:mx-0 mx-auto">
+            <p className="mt-1.5 text-base text-white/70 max-w-md lg:mx-0 mx-auto">
               טיסה עם מדריך מקצועי · נופים מטורפים · מתאים לכולם
             </p>
 
@@ -63,10 +69,10 @@ export default function HeroV2() {
               </AffiliateWhatsAppLink>
             </div>
 
-            <p className="mt-4 text-sm font-semibold text-yellow-300">
+            <p className="mt-4 text-sm font-semibold text-yellow-300 drop-shadow-sm">
               📅 סופי שבוע נתפסים מהר — מספר המקומות מוגבל
             </p>
-            <p className="mt-2 text-xs text-white/40">
+            <p className="mt-2 text-xs text-white/55">
               ♿ מתאים גם לאנשים עם מגבלויות – בתיאום מראש
             </p>
           </div>
@@ -97,7 +103,7 @@ export default function HeroV2() {
       </div>
 
       <svg
-        className="block w-full -mb-px text-brand-soft"
+        className="relative block w-full -mb-px text-brand-soft"
         viewBox="0 0 1440 60"
         fill="currentColor"
         aria-hidden
