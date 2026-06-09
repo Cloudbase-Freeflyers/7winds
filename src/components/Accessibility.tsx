@@ -53,7 +53,7 @@ export default function Accessibility() {
           {/* Image — side by side on desktop */}
           <div className="w-full lg:w-80 xl:w-96 shrink-0 rounded-2xl overflow-hidden ring-2 ring-white/20 shadow-xl">
             <Image
-              src="/images/accessibility.png"
+              src="/images/accessibility-flight.png"
               alt="טיסת מצנח רחיפה עם כיסא גלגלים — 7Winds"
               width={900}
               height={600}

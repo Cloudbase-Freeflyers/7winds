@@ -18,10 +18,10 @@ export default function VideoSectionV2() {
         <div className="mt-8 grid grid-cols-3 gap-3 sm:gap-4">
           <div className="relative aspect-[9/16] rounded-2xl overflow-hidden shadow-md ring-1 ring-black/5">
             <Image
-              src={V2_IMAGES.tandemOverWater}
+              src={V2_IMAGES.tandemSeaVertical}
               alt="טיסת מצנח רחיפה מעל הים — 7Winds"
               fill
-              className="object-cover object-[28%_35%]"
+              className="object-cover object-[30%_center]"
               sizes="33vw"
             />
           </div>
@@ -43,7 +43,7 @@ export default function VideoSectionV2() {
               src={V2_IMAGES.fieldFlight}
               alt="טיסת מצנח רחיפה עם נוף שדות — 7Winds"
               fill
-              className="object-cover object-top"
+              className="object-cover object-[40%_25%]"
               sizes="33vw"
             />
           </div>

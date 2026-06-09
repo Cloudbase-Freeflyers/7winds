@@ -49,12 +49,46 @@ export default function VoucherForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="rounded-3xl bg-brand-soft ring-1 ring-black/5 p-7 sm:p-8 shadow-sm flex flex-col h-full"
+      className="relative rounded-3xl overflow-hidden shadow-xl flex flex-col h-full"
+      style={{
+        background: "linear-gradient(180deg, #faf6ee 0%, #f5efe3 100%)",
+        border: "2px solid rgba(180,140,80,0.25)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)",
+      }}
       noValidate
     >
-      <h3 className="font-display text-xl font-extrabold text-brand-black">
-        רכישת שובר מתנה
-      </h3>
+      {/* Perforated ticket edge */}
+      <div
+        className="relative h-3 shrink-0"
+        style={{
+          background: "repeating-linear-gradient(90deg, #1ABBEF 0 8px, transparent 8px 16px)",
+          opacity: 0.35,
+        }}
+        aria-hidden
+      />
+      <div className="absolute top-1.5 start-4 end-4 flex justify-between pointer-events-none" aria-hidden>
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div key={i} className="w-2 h-2 rounded-full bg-brand-soft" />
+        ))}
+      </div>
+
+      <div className="px-7 sm:px-8 pt-5 pb-7 sm:pb-8 flex flex-col flex-1">
+        <div className="flex items-center gap-3">
+          <span
+            className="inline-flex items-center justify-center w-10 h-10 rounded-full text-lg shrink-0"
+            style={{ background: "linear-gradient(135deg, #fde68a, #f59e0b)" }}
+          >
+            🎁
+          </span>
+          <div>
+            <h3 className="font-display text-xl font-extrabold text-brand-black">
+              רכישת שובר מתנה
+            </h3>
+            <p className="text-xs text-brand-dark mt-0.5">
+              מלאו את הפרטים — ונפיק עבורכם שובר אישי
+            </p>
+          </div>
+        </div>
 
       <div className="mt-5 grid gap-4 flex-1">
         <div>
@@ -65,7 +99,7 @@ export default function VoucherForm() {
             name="package"
             required
             defaultValue=""
-            className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-brand-black focus:border-brand-sky focus:outline-none focus:ring-4 focus:ring-brand-sky/20 transition"
+            className="w-full rounded-xl border border-[#d4c4a8]/60 bg-white/90 px-4 py-3 text-brand-black focus:border-brand-sky focus:outline-none focus:ring-4 focus:ring-brand-sky/20 transition"
           >
             <option value="" disabled>
               בחרו מסלול…
@@ -119,7 +153,7 @@ export default function VoucherForm() {
             <select
               name="occasion"
               defaultValue=""
-              className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-brand-black focus:border-brand-sky focus:outline-none focus:ring-4 focus:ring-brand-sky/20 transition"
+              className="w-full rounded-xl border border-[#d4c4a8]/60 bg-white/90 px-4 py-3 text-brand-black focus:border-brand-sky focus:outline-none focus:ring-4 focus:ring-brand-sky/20 transition"
             >
               <option value="">— לא רלוונטי —</option>
               {VOUCHER_OCCASIONS.map((o) => (
@@ -139,7 +173,7 @@ export default function VoucherForm() {
             name="notes"
             rows={3}
             maxLength={1000}
-            className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-brand-black focus:border-brand-sky focus:outline-none focus:ring-4 focus:ring-brand-sky/20 transition"
+            className="w-full rounded-xl border border-[#d4c4a8]/60 bg-white/90 px-4 py-3 text-brand-black focus:border-brand-sky focus:outline-none focus:ring-4 focus:ring-brand-sky/20 transition"
             placeholder="נשמח לדעת כל פרט שיעזור לנו להפוך את המתנה למושלמת."
           />
         </div>
@@ -158,6 +192,7 @@ export default function VoucherForm() {
       >
         {state === "submitting" ? "מעביר לתשלום…" : "המשך לתשלום מאובטח 🎁"}
       </button>
+      </div>
     </form>
   );
 }
@@ -171,7 +206,7 @@ function Input(props: React.InputHTMLAttributes<HTMLInputElement> & { label: str
       </label>
       <input
         {...rest}
-        className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-brand-black focus:border-brand-sky focus:outline-none focus:ring-4 focus:ring-brand-sky/20 transition"
+        className="w-full rounded-xl border border-[#d4c4a8]/60 bg-white/90 px-4 py-3 text-brand-black focus:border-brand-sky focus:outline-none focus:ring-4 focus:ring-brand-sky/20 transition"
       />
     </div>
   );

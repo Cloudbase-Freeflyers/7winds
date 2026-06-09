@@ -21,7 +21,8 @@ export const HERO_FILM_VIDEO_ID = "4VjdoHoQMmE";
 
 export const V2_IMAGES = {
   tandemOverWater: "/images/v2/tandem-hero-bg.png",
-  fieldFlight: "/images/v2/field-flight.jpeg",
+  tandemSeaVertical: "/images/v2/tandem-sea-vertical.png",
+  fieldFlight: "/images/v2/field-flight-bg.png",
 } as const;
 
 export function whatsappMessage(
