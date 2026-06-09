@@ -43,6 +43,13 @@ export default function AffiliateManager() {
   const [payoutNotes, setPayoutNotes] = useState("");
   const [credentialEmail, setCredentialEmail] = useState("");
   const [credentialPassword, setCredentialPassword] = useState("");
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editCommissionRate, setEditCommissionRate] = useState("10");
+  const [editCommissionType, setEditCommissionType] = useState<"percent" | "fixed">(
+    "percent"
+  );
+  const [editNotes, setEditNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -70,10 +77,20 @@ export default function AffiliateManager() {
     if (!selected) {
       setCredentialEmail("");
       setCredentialPassword("");
+      setEditName("");
+      setEditPhone("");
+      setEditCommissionRate("10");
+      setEditCommissionType("percent");
+      setEditNotes("");
       return;
     }
     setCredentialEmail(selected.email || "");
     setCredentialPassword("");
+    setEditName(selected.name);
+    setEditPhone(selected.phone || "");
+    setEditCommissionRate(String(selected.commissionRate));
+    setEditCommissionType(selected.commissionType);
+    setEditNotes(selected.notes || "");
   }, [selected]);
 
   function autoCodeFromName(value: string) {
@@ -185,6 +202,29 @@ export default function AffiliateManager() {
     }
   }
 
+  async function saveAffiliateDetails(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selected) return;
+    setSaving(true);
+    try {
+      await updateAffiliate(selected._id, {
+        name: editName,
+        phone: editPhone,
+        commissionRate: Number(editCommissionRate),
+        commissionType: editCommissionType,
+        notes: editNotes,
+      });
+    } catch {
+      // updateAffiliate already alerts
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function formatCommission(rate: number, type: "percent" | "fixed") {
+    return type === "percent" ? `${rate}%` : `₪${rate}`;
+  }
+
   function copyLink(code: string) {
     navigator.clipboard.writeText(affiliateUrl(code)).catch(() => {});
   }
@@ -209,6 +249,7 @@ export default function AffiliateManager() {
                 <Th>ביקורים</Th>
                 <Th>לידים</Th>
                 <Th>שוברים</Th>
+                <Th>עמלה</Th>
                 <Th>עמלה משוערת</Th>
                 <Th>יתרה</Th>
                 <Th>תשלום</Th>
@@ -217,14 +258,14 @@ export default function AffiliateManager() {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={10} className="px-4 py-8 text-center text-brand-dark">
+                  <td colSpan={11} className="px-4 py-8 text-center text-brand-dark">
                     טוען…
                   </td>
                 </tr>
               )}
               {!loading && rows.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="px-4 py-8 text-center text-brand-dark">
+                  <td colSpan={11} className="px-4 py-8 text-center text-brand-dark">
                     אין שותפים עדיין
                   </td>
                 </tr>
@@ -256,6 +297,7 @@ export default function AffiliateManager() {
                   <Td>{r.stats.visits}</Td>
                   <Td>{r.stats.leads}</Td>
                   <Td>{r.stats.vouchers}</Td>
+                  <Td>{formatCommission(r.commissionRate, r.commissionType)}</Td>
                   <Td>₪{r.stats.estimatedEarnings}</Td>
                   <Td>₪{r.stats.pendingBalance}</Td>
                   <Td>
@@ -385,6 +427,80 @@ export default function AffiliateManager() {
                 /affiliate/login
               </a>
             </p>
+
+            <p className="mt-2 text-sm text-brand-dark">
+              עמלה:{" "}
+              <span className="font-bold text-brand-black">
+                {formatCommission(selected.commissionRate, selected.commissionType)}
+              </span>
+              {selected.commissionType === "percent" && (
+                <span className="text-xs"> (מלידים ושוברים)</span>
+              )}
+            </p>
+
+            <form
+              onSubmit={saveAffiliateDetails}
+              className="mt-4 border border-black/5 rounded-xl p-4 bg-brand-soft/40"
+            >
+              <h3 className="font-bold text-sm">עריכת פרטי שותף</h3>
+              <div className="mt-3 grid gap-2">
+                <Field label="שם">
+                  <input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    required
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="טלפון">
+                  <input
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    dir="ltr"
+                    className={inputCls}
+                  />
+                </Field>
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label="עמלה">
+                    <input
+                      type="number"
+                      min={0}
+                      value={editCommissionRate}
+                      onChange={(e) => setEditCommissionRate(e.target.value)}
+                      required
+                      className={inputCls}
+                    />
+                  </Field>
+                  <Field label="סוג עמלה">
+                    <select
+                      value={editCommissionType}
+                      onChange={(e) =>
+                        setEditCommissionType(e.target.value as "percent" | "fixed")
+                      }
+                      className={inputCls}
+                    >
+                      <option value="percent">אחוזים %</option>
+                      <option value="fixed">סכום קבוע ₪</option>
+                    </select>
+                  </Field>
+                </div>
+                <Field label="הערות">
+                  <textarea
+                    value={editNotes}
+                    onChange={(e) => setEditNotes(e.target.value)}
+                    rows={2}
+                    className={inputCls}
+                  />
+                </Field>
+              </div>
+              <button
+                type="submit"
+                disabled={saving}
+                className="mt-3 btn-primary btn-sm w-full"
+              >
+                {saving ? "שומר…" : "שמור פרטי שותף"}
+              </button>
+            </form>
 
             <form
               onSubmit={saveCredentials}
