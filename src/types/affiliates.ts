@@ -8,6 +8,8 @@ export interface AffiliateDoc {
   _id?: ObjectId;
   code: string;
   name: string;
+  email?: string;
+  passwordHash?: string;
   phone?: string;
   commissionRate: number;
   commissionType: CommissionType;

@@ -28,6 +28,9 @@ async function ensureIndexes() {
   const db = await getDb();
   await db.collection("affiliates").createIndex({ code: 1 }, { unique: true });
   await db
+    .collection("affiliates")
+    .createIndex({ email: 1 }, { unique: true, sparse: true });
+  await db
     .collection("affiliate_events")
     .createIndex({ affiliateId: 1, type: 1, createdAt: -1 });
   indexEnsured = true;
@@ -41,6 +44,16 @@ export async function getAffiliateByCode(
   return db.collection<AffiliateDoc>("affiliates").findOne({
     code: code.toLowerCase(),
     status: "active",
+  });
+}
+
+export async function getAffiliateByEmail(
+  email: string
+): Promise<AffiliateDoc | null> {
+  await ensureIndexes();
+  const db = await getDb();
+  return db.collection<AffiliateDoc>("affiliates").findOne({
+    email: email.trim().toLowerCase(),
   });
 }
 

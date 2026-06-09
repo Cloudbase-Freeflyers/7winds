@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
+import { hashPassword } from "@/lib/affiliate-auth";
 import { affiliateUpdateSchema } from "@/lib/validation";
 import type { AffiliateDoc } from "@/types/affiliates";
 
@@ -43,9 +44,39 @@ export async function PATCH(req: Request, { params }: Params) {
     updates.payoutStatus = parsed.data.payoutStatus;
   if (parsed.data.notes !== undefined)
     updates.notes = parsed.data.notes || undefined;
+  if (parsed.data.email !== undefined) {
+    updates.email = parsed.data.email
+      ? parsed.data.email.toLowerCase()
+      : undefined;
+  }
+  if (parsed.data.password) {
+    updates.passwordHash = hashPassword(parsed.data.password);
+  }
 
   try {
     const db = await getDb();
+    const existing = await db
+      .collection<AffiliateDoc>("affiliates")
+      .findOne({ _id: new ObjectId(id) });
+
+    if (!existing) {
+      return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+    }
+
+    const nextEmail =
+      parsed.data.email !== undefined
+        ? parsed.data.email || undefined
+        : existing.email;
+    const nextPasswordHash =
+      updates.passwordHash || existing.passwordHash;
+
+    if (nextEmail && !nextPasswordHash) {
+      return NextResponse.json(
+        { ok: false, error: "יש להגדיר סיסמה יחד עם אימייל לכניסת שותף" },
+        { status: 400 }
+      );
+    }
+
     const result = await db
       .collection<AffiliateDoc>("affiliates")
       .findOneAndUpdate(
@@ -58,15 +89,24 @@ export async function PATCH(req: Request, { params }: Params) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
     }
 
+    const { passwordHash: _passwordHash, ...affiliate } = result;
     return NextResponse.json({
       ok: true,
-      affiliate: { ...result, _id: String(result._id) },
+      affiliate: {
+        ...affiliate,
+        _id: String(result._id),
+        hasLogin: Boolean(result.email && result.passwordHash),
+      },
     });
   } catch (err) {
+    const message =
+      err instanceof Error && "code" in err && err.code === 11000
+        ? "אימייל כבר בשימוש"
+        : "עדכון נכשל";
     console.error("[admin/affiliates PATCH]", err);
     return NextResponse.json(
-      { ok: false, error: "עדכון נכשל" },
-      { status: 500 }
+      { ok: false, error: message },
+      { status: err instanceof Error && "code" in err && err.code === 11000 ? 409 : 500 }
     );
   }
 }

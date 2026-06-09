@@ -34,28 +34,63 @@ export function normalizePhone(raw: string) {
   return raw.replace(/[^\d+]/g, "");
 }
 
-export const affiliateCreateSchema = z.object({
-  name: z.string().trim().min(2, "נא להזין שם").max(80),
-  code: z
-    .string()
-    .trim()
-    .min(2, "קוד קצר מדי")
-    .max(40)
-    .regex(/^[a-z0-9-]+$/, "קוד יכול להכיל אותיות אנגליות קטנות, מספרים ומקפים בלבד"),
-  phone: z.string().trim().max(30).optional().or(z.literal("")),
-  commissionRate: z.coerce.number().min(0).max(100000),
-  commissionType: z.enum(["percent", "fixed"]),
-  notes: z.string().trim().max(500).optional().or(z.literal("")),
-});
+const affiliateEmailSchema = z
+  .string()
+  .trim()
+  .email("כתובת אימייל לא תקינה")
+  .max(120);
+
+const affiliatePasswordSchema = z
+  .string()
+  .min(8, "סיסמה חייבת להכיל לפחות 8 תווים")
+  .max(128);
+
+export const affiliateCreateSchema = z
+  .object({
+    name: z.string().trim().min(2, "נא להזין שם").max(80),
+    code: z
+      .string()
+      .trim()
+      .min(2, "קוד קצר מדי")
+      .max(40)
+      .regex(
+        /^[a-z0-9-]+$/,
+        "קוד יכול להכיל אותיות אנגליות קטנות, מספרים ומקפים בלבד"
+      ),
+    email: affiliateEmailSchema.optional().or(z.literal("")),
+    password: affiliatePasswordSchema.optional().or(z.literal("")),
+    phone: z.string().trim().max(30).optional().or(z.literal("")),
+    commissionRate: z.coerce.number().min(0).max(100000),
+    commissionType: z.enum(["percent", "fixed"]),
+    notes: z.string().trim().max(500).optional().or(z.literal("")),
+  })
+  .superRefine((data, ctx) => {
+    const hasEmail = !!data.email;
+    const hasPassword = !!data.password;
+    if (hasEmail !== hasPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "יש להזין גם אימייל וגם סיסמה לכניסת שותף",
+        path: hasEmail ? ["password"] : ["email"],
+      });
+    }
+  });
 
 export const affiliateUpdateSchema = z.object({
   name: z.string().trim().min(2).max(80).optional(),
+  email: affiliateEmailSchema.optional().or(z.literal("")),
+  password: affiliatePasswordSchema.optional().or(z.literal("")),
   phone: z.string().trim().max(30).optional().or(z.literal("")),
   commissionRate: z.coerce.number().min(0).max(100000).optional(),
   commissionType: z.enum(["percent", "fixed"]).optional(),
   status: z.enum(["active", "inactive"]).optional(),
   payoutStatus: z.enum(["none", "pending", "paid"]).optional(),
   notes: z.string().trim().max(500).optional().or(z.literal("")),
+});
+
+export const affiliateLoginSchema = z.object({
+  email: affiliateEmailSchema,
+  password: z.string().min(1, "נא להזין סיסמה").max(128),
 });
 
 export const affiliatePayoutSchema = z.object({

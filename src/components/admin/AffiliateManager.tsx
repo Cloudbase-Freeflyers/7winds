@@ -8,6 +8,8 @@ interface AffiliateRow {
   _id: string;
   code: string;
   name: string;
+  email?: string;
+  hasLogin?: boolean;
   phone?: string;
   commissionRate: number;
   commissionType: "percent" | "fixed";
@@ -28,6 +30,8 @@ export default function AffiliateManager() {
 
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [commissionRate, setCommissionRate] = useState("10");
   const [commissionType, setCommissionType] = useState<"percent" | "fixed">(
@@ -37,6 +41,8 @@ export default function AffiliateManager() {
 
   const [payoutAmount, setPayoutAmount] = useState("");
   const [payoutNotes, setPayoutNotes] = useState("");
+  const [credentialEmail, setCredentialEmail] = useState("");
+  const [credentialPassword, setCredentialPassword] = useState("");
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
@@ -60,6 +66,16 @@ export default function AffiliateManager() {
 
   const selected = rows.find((r) => r._id === selectedId) ?? null;
 
+  useEffect(() => {
+    if (!selected) {
+      setCredentialEmail("");
+      setCredentialPassword("");
+      return;
+    }
+    setCredentialEmail(selected.email || "");
+    setCredentialPassword("");
+  }, [selected]);
+
   function autoCodeFromName(value: string) {
     setName(value);
     if (!code || code === slugifyCode(name)) {
@@ -78,6 +94,8 @@ export default function AffiliateManager() {
         body: JSON.stringify({
           name,
           code: code || slugifyCode(name),
+          email,
+          password,
           phone,
           commissionRate: Number(commissionRate),
           commissionType,
@@ -88,6 +106,8 @@ export default function AffiliateManager() {
       if (!res.ok) throw new Error(data.error || "יצירה נכשלה");
       setName("");
       setCode("");
+      setEmail("");
+      setPassword("");
       setPhone("");
       setCommissionRate("10");
       setCommissionType("percent");
@@ -148,6 +168,23 @@ export default function AffiliateManager() {
     }
   }
 
+  async function saveCredentials(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selected) return;
+    setSaving(true);
+    try {
+      await updateAffiliate(selected._id, {
+        email: credentialEmail,
+        ...(credentialPassword ? { password: credentialPassword } : {}),
+      });
+      setCredentialPassword("");
+    } catch {
+      // updateAffiliate already alerts
+    } finally {
+      setSaving(false);
+    }
+  }
+
   function copyLink(code: string) {
     navigator.clipboard.writeText(affiliateUrl(code)).catch(() => {});
   }
@@ -167,6 +204,7 @@ export default function AffiliateManager() {
               <tr>
                 <Th>שם</Th>
                 <Th>קוד</Th>
+                <Th>כניסה</Th>
                 <Th>סטטוס</Th>
                 <Th>ביקורים</Th>
                 <Th>לידים</Th>
@@ -179,14 +217,14 @@ export default function AffiliateManager() {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-brand-dark">
+                  <td colSpan={10} className="px-4 py-8 text-center text-brand-dark">
                     טוען…
                   </td>
                 </tr>
               )}
               {!loading && rows.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-brand-dark">
+                  <td colSpan={10} className="px-4 py-8 text-center text-brand-dark">
                     אין שותפים עדיין
                   </td>
                 </tr>
@@ -202,6 +240,15 @@ export default function AffiliateManager() {
                   <Td>{r.name}</Td>
                   <Td dir="ltr" className="font-mono text-xs">
                     {r.code}
+                  </Td>
+                  <Td>
+                    {r.hasLogin ? (
+                      <span className="inline-block rounded-full px-2 py-0.5 text-xs font-bold bg-blue-100 text-blue-800">
+                        פעיל
+                      </span>
+                    ) : (
+                      <span className="text-xs text-brand-dark">—</span>
+                    )}
                   </Td>
                   <Td>
                     <StatusBadge status={r.status} />
@@ -255,6 +302,27 @@ export default function AffiliateManager() {
                 className={inputCls}
               />
             </Field>
+            <Field label="אימייל לכניסת שותף (לא חובה)">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                dir="ltr"
+                className={inputCls}
+                placeholder="partner@example.com"
+              />
+            </Field>
+            <Field label="סיסמה ראשונית (8+ תווים)">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                dir="ltr"
+                className={inputCls}
+                minLength={email ? 8 : undefined}
+                required={!!email}
+              />
+            </Field>
             <div className="grid grid-cols-2 gap-3">
               <Field label="עמלה">
                 <input
@@ -306,6 +374,50 @@ export default function AffiliateManager() {
             <p className="mt-1 text-xs text-brand-dark font-mono" dir="ltr">
               {affiliateUrl(selected.code)}
             </p>
+            <p className="mt-2 text-xs text-brand-dark">
+              כניסת שותף:{" "}
+              <a
+                href="/affiliate/login"
+                className="text-brand-sky font-bold underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                /affiliate/login
+              </a>
+            </p>
+
+            <form
+              onSubmit={saveCredentials}
+              className="mt-4 border border-black/5 rounded-xl p-4 bg-brand-soft/40"
+            >
+              <h3 className="font-bold text-sm">פרטי כניסה לשותף</h3>
+              <div className="mt-3 grid gap-2">
+                <input
+                  type="email"
+                  value={credentialEmail}
+                  onChange={(e) => setCredentialEmail(e.target.value)}
+                  dir="ltr"
+                  placeholder="אימייל"
+                  className={inputCls}
+                />
+                <input
+                  type="password"
+                  value={credentialPassword}
+                  onChange={(e) => setCredentialPassword(e.target.value)}
+                  dir="ltr"
+                  placeholder="סיסמה חדשה (השאר ריק לשמירה)"
+                  className={inputCls}
+                  minLength={8}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={saving}
+                className="mt-3 btn-secondary btn-sm w-full"
+              >
+                {saving ? "שומר…" : "שמור פרטי כניסה"}
+              </button>
+            </form>
 
             <div className="mt-4 flex flex-col items-center gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}

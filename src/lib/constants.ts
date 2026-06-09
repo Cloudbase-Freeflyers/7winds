@@ -4,8 +4,8 @@ export const BRAND = {
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://7windsparagliding.com",
 } as const;
 
-const rawWhatsApp = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "972500000000";
-const rawPhone = process.env.NEXT_PUBLIC_PHONE_NUMBER || "+972-50-000-0000";
+const rawWhatsApp = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "972515152637";
+const rawPhone = process.env.NEXT_PUBLIC_PHONE_NUMBER || "0515152637";
 
 export const CONTACT = {
   whatsappNumber: rawWhatsApp.replace(/[^\d]/g, ""),
@@ -15,6 +15,14 @@ export const CONTACT = {
 
 export const youtubeVideoId =
   process.env.NEXT_PUBLIC_YOUTUBE_VIDEO_ID || "nKW4Dyv_uJ4";
+
+/** Client-approved hero + explainer film (v2) */
+export const HERO_FILM_VIDEO_ID = "4VjdoHoQMmE";
+
+export const V2_IMAGES = {
+  tandemOverWater: "/images/v2/tandem-over-water.jpeg",
+  fieldFlight: "/images/v2/field-flight.jpeg",
+} as const;
 
 export function whatsappMessage(
   message: string,

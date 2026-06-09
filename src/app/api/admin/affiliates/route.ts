@@ -1,21 +1,28 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { listAffiliates, slugifyCode } from "@/lib/affiliates";
+import { hashPassword } from "@/lib/affiliate-auth";
 import { affiliateCreateSchema } from "@/lib/validation";
 import type { AffiliateDoc } from "@/types/affiliates";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function sanitizeAffiliateRow(a: AffiliateDoc & { stats?: unknown }) {
+  const { passwordHash: _passwordHash, ...rest } = a;
+  return {
+    ...rest,
+    _id: String(a._id),
+    createdAt: a.createdAt.toISOString(),
+    updatedAt: a.updatedAt.toISOString(),
+    hasLogin: Boolean(a.email && a.passwordHash),
+  };
+}
+
 export async function GET() {
   try {
     const affiliates = await listAffiliates();
-    const rows = affiliates.map((a) => ({
-      ...a,
-      _id: String(a._id),
-      createdAt: a.createdAt.toISOString(),
-      updatedAt: a.updatedAt.toISOString(),
-    }));
+    const rows = affiliates.map((a) => sanitizeAffiliateRow(a));
     return NextResponse.json({ ok: true, rows });
   } catch (err) {
     console.error("[admin/affiliates GET]", err);
@@ -73,17 +80,29 @@ export async function POST(req: Request) {
       updatedAt: now,
     };
 
+    if (parsed.data.email) {
+      doc.email = parsed.data.email.toLowerCase();
+      doc.passwordHash = hashPassword(parsed.data.password!);
+    }
+
     const result = await db.collection<AffiliateDoc>("affiliates").insertOne(doc);
     return NextResponse.json({
       ok: true,
       id: result.insertedId.toString(),
-      affiliate: { ...doc, _id: result.insertedId.toString() },
+      affiliate: sanitizeAffiliateRow({
+        ...doc,
+        _id: result.insertedId,
+      }),
     });
   } catch (err) {
+    const message =
+      err instanceof Error && "code" in err && err.code === 11000
+        ? "אימייל או קוד שותף כבר קיים"
+        : "יצירת שותף נכשלה";
     console.error("[admin/affiliates POST]", err);
     return NextResponse.json(
-      { ok: false, error: "יצירת שותף נכשלה" },
-      { status: 500 }
+      { ok: false, error: message },
+      { status: err instanceof Error && "code" in err && err.code === 11000 ? 409 : 500 }
     );
   }
 }
