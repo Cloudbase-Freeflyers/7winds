@@ -29,6 +29,13 @@ export const MAIN_MARKETING_PAGES: MarketingPageLink[] = [
     type: "main",
   },
   {
+    id: "affiliate-proposal",
+    label: "תוכנית עמלות שותפים",
+    path: "/affiliate/proposal",
+    description: "הצעת מבנה עמלות — noindex",
+    type: "main",
+  },
+  {
     id: "pricing",
     label: "מחירים",
     path: "/#pricing",
