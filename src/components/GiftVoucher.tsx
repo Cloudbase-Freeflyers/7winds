@@ -1,12 +1,17 @@
+"use client";
+
+import { useState } from "react";
 import VoucherForm from "@/components/forms/VoucherForm";
 import VoucherCard from "@/components/VoucherCard";
 import { VOUCHER_OCCASIONS } from "@/lib/constants";
 
 export default function GiftVoucher() {
+  const [recipientName, setRecipientName] = useState("");
+  const [occasion, setOccasion] = useState("");
+
   return (
     <section id="voucher" className="section bg-gradient-to-b from-white via-brand-soft/40 to-brand-soft">
       <div className="max-w-6xl mx-auto">
-        {/* Section header */}
         <div className="text-center max-w-2xl mx-auto">
           <span className="inline-block rounded-full bg-brand-yellow/30 text-brand-black text-xs font-bold tracking-wide px-3 py-1">
             מתנה מקורית 🎁
@@ -20,10 +25,9 @@ export default function GiftVoucher() {
           </p>
         </div>
 
-        {/* Voucher card + purchase form */}
         <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] items-start lg:items-center">
           <div className="flex flex-col items-center gap-6">
-            <VoucherCard />
+            <VoucherCard recipientName={recipientName} occasion={occasion} />
 
             <div className="w-full max-w-lg space-y-4">
               <div>
@@ -51,7 +55,10 @@ export default function GiftVoucher() {
             </div>
           </div>
 
-          <VoucherForm />
+          <VoucherForm
+            onRecipientNameChange={setRecipientName}
+            onOccasionChange={setOccasion}
+          />
         </div>
       </div>
     </section>

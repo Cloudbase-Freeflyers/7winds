@@ -34,8 +34,13 @@ export function buildCheckoutRedirectUrl(params: {
   buyerEmail: string;
   affiliateCode?: string;
   orderType: "voucher" | "direct";
+  bookingAudience?: "solo" | "group";
 }): string {
-  const url = new URL(getPayPageUrl());
+  const payPageUrl =
+    params.bookingAudience === "group" && process.env.ICOUNT_GROUP_PAYPAGE_URL?.trim()
+      ? process.env.ICOUNT_GROUP_PAYPAGE_URL.trim().replace(/\?$/, "")
+      : getPayPageUrl();
+  const url = new URL(payPageUrl);
   const site = getSiteBaseUrl();
 
   url.searchParams.set("cs", String(params.amount));
@@ -43,10 +48,13 @@ export function buildCheckoutRedirectUrl(params: {
   url.searchParams.set("full_name", params.buyerName);
   url.searchParams.set("contact_phone", params.buyerPhone);
   url.searchParams.set("contact_email", params.buyerEmail);
-  url.searchParams.set(
-    "success_url",
-    `${site}/payment/success?order=${encodeURIComponent(params.orderId)}`
-  );
+
+  const successPath =
+    params.orderType === "voucher"
+      ? `/payment/voucher?order=${encodeURIComponent(params.orderId)}`
+      : `/payment/success?order=${encodeURIComponent(params.orderId)}`;
+
+  url.searchParams.set("success_url", `${site}${successPath}`);
   url.searchParams.set(
     "failure_url",
     `${site}/payment/failed?order=${encodeURIComponent(params.orderId)}`
@@ -60,6 +68,9 @@ export function buildCheckoutRedirectUrl(params: {
   url.searchParams.set("m__orderType", params.orderType);
   if (params.affiliateCode) {
     url.searchParams.set("m__affiliateCode", params.affiliateCode);
+  }
+  if (params.bookingAudience) {
+    url.searchParams.set("m__bookingAudience", params.bookingAudience);
   }
 
   return url.toString();

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import AffiliateWhatsAppLink from "@/components/AffiliateWhatsAppLink";
+import { WHATSAPP_MESSAGES } from "@/lib/constants";
 import { CONTACT } from "@/lib/constants";
 
 export default function Footer() {
@@ -41,7 +42,7 @@ export default function Footer() {
             </li>
             <li>
               <AffiliateWhatsAppLink
-                message="היי 7Winds!"
+                message={WHATSAPP_MESSAGES.greeting}
                 trackLabel="footer"
                 className="hover:text-white"
               >

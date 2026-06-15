@@ -1,6 +1,6 @@
 import AffiliateWhatsAppLink from "@/components/AffiliateWhatsAppLink";
 import PayCheckoutModal from "@/components/PayCheckoutModal";
-import type { ProductPackage } from "@/lib/constants";
+import { WHATSAPP_MESSAGES, type ProductPackage } from "@/lib/constants";
 
 type PayableItem = {
   label: string;
@@ -35,7 +35,7 @@ const PACKAGES = [
   },
 ];
 
-const WA_MESSAGE = "היי 7Winds! אשמח לפרטים על טיסת טנדם 🪂";
+const WA_MESSAGE = WHATSAPP_MESSAGES.tandem;
 
 export default function Pricing() {
   return (
@@ -127,7 +127,7 @@ export default function Pricing() {
                 </ul>
 
                 <div className="mt-5 flex gap-3">
-                  <a href="#contact" className="btn-primary btn-md flex-1 text-center">
+                  <a href="#booking" className="btn-primary btn-md flex-1 text-center">
                     תפסו לי מקום
                   </a>
                   <AffiliateWhatsAppLink

@@ -49,6 +49,7 @@ export const checkoutSchema = z.object({
   occasion: z.string().trim().max(80).optional().or(z.literal("")),
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
   affiliateCode: z.string().trim().max(40).optional().or(z.literal("")),
+  bookingAudience: z.enum(["solo", "group"]).optional(),
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;

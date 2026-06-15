@@ -1,8 +1,8 @@
 import AffiliateWhatsAppLink from "@/components/AffiliateWhatsAppLink";
 import ParagliderCanvas from "@/components/ParagliderCanvas";
+import { WHATSAPP_MESSAGES } from "@/lib/constants";
 
 const SHORT_ID = "66a3M3_L1ps";
-const waMessage = "היי 7Winds! אשמח לפרטים על טיסת טנדם 🪂";
 
 export default function Hero() {
   return (
@@ -59,11 +59,11 @@ export default function Hero() {
 
             {/* CTAs */}
             <div className="mt-7 flex flex-col sm:flex-row justify-center lg:justify-start gap-3">
-              <a href="#contact" className="btn-primary btn-lg w-full sm:w-auto text-center">
+              <a href="#booking" className="btn-primary btn-lg w-full sm:w-auto text-center">
                 קבעו טיסה עכשיו
               </a>
               <AffiliateWhatsAppLink
-                message={waMessage}
+                message={WHATSAPP_MESSAGES.tandem}
                 trackLabel="hero"
                 className="btn-whatsapp btn-lg w-full sm:w-auto text-center"
               >

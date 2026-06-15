@@ -53,6 +53,7 @@ export async function POST(req: Request) {
       buyerEmail: parsed.data.buyerEmail,
       affiliateCode: affiliate?.code,
       orderType: parsed.data.type,
+      bookingAudience: parsed.data.bookingAudience,
     });
 
     const db = await getDb();
@@ -66,6 +67,7 @@ export async function POST(req: Request) {
       package: parsed.data.package,
       notes: parsed.data.notes || undefined,
       orderType: parsed.data.type,
+      bookingAudience: parsed.data.bookingAudience,
       amount,
       paymentStatus: "pending",
       createdAt: new Date(),

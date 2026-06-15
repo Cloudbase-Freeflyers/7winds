@@ -1,12 +1,12 @@
-import LeadForm from "@/components/forms/LeadForm";
+import BookingForm from "@/components/forms/BookingForm";
 import AffiliateWhatsAppLink from "@/components/AffiliateWhatsAppLink";
-import { CONTACT } from "@/lib/constants";
+import { CONTACT, WHATSAPP_MESSAGES } from "@/lib/constants";
 
-const WA_MESSAGE = "היי 7Winds! אשמח לפרטים על טיסת טנדם 🪂";
+const WA_MESSAGE = WHATSAPP_MESSAGES.tandem;
 
 export default function ContactSection() {
   return (
-    <section id="contact" className="section bg-white">
+    <section id="booking" className="section bg-white">
       <div className="max-w-6xl mx-auto grid gap-10 lg:grid-cols-2 items-start">
         <div>
           <span className="inline-block rounded-full bg-brand-sky/10 text-brand-sky text-xs font-bold tracking-wide px-3 py-1">
@@ -16,8 +16,8 @@ export default function ContactSection() {
             בואו נמריא יחד
           </h2>
           <p className="mt-3 text-brand-dark leading-relaxed">
-            השאירו פרטים ונחזור אליכם בהקדם לתיאום טיסה. אפשר גם בוואטסאפ או
-            בטלפון – מה שהכי נוח לכם.
+            בחרו מסלול, מלאו פרטים והמשיכו לתשלום מאובטח. טיסה בשבילכם או לקבוצה —
+            אפשר גם בוואטסאפ או בטלפון.
           </p>
 
           <div className="mt-6 space-y-3">
@@ -45,7 +45,7 @@ export default function ContactSection() {
           </div>
         </div>
 
-        <LeadForm />
+        <BookingForm />
       </div>
     </section>
   );

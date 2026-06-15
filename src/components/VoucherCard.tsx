@@ -1,11 +1,25 @@
 import Image from "next/image";
 import { CONTACT, V2_IMAGES } from "@/lib/constants";
 
-export default function VoucherCard() {
+type Props = {
+  recipientName?: string;
+  occasion?: string;
+  /** When true, removes hover/select restrictions for PDF capture */
+  printable?: boolean;
+};
+
+export default function VoucherCard({
+  recipientName,
+  occasion,
+  printable = false,
+}: Props) {
+  const displayName = recipientName?.trim();
+  const displayOccasion = occasion?.trim();
+
   return (
     <div
       dir="rtl"
-      className="relative w-full max-w-lg mx-auto select-none"
+      className={`relative w-full max-w-lg mx-auto ${printable ? "" : "select-none"}`}
       style={{ perspective: "1200px" }}
     >
       {/* Card shadow layer */}
@@ -51,6 +65,27 @@ export default function VoucherCard() {
 
         {/* Gift tag — top left */}
         <GiftTag />
+
+        {/* Recipient name */}
+        {displayName && (
+          <div className="absolute inset-x-0 top-[38%] z-20 flex justify-center px-6 pointer-events-none">
+            <div
+              className="rounded-2xl px-5 py-2.5 text-center shadow-xl"
+              style={{
+                background: "linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(248,251,255,0.95) 100%)",
+                border: "2px solid rgba(26,187,239,0.45)",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.18)",
+              }}
+            >
+              <p className="text-[10px] font-bold text-brand-sky tracking-wide uppercase">
+                {displayOccasion ? `ל${displayOccasion}` : "מוקדש ל"}
+              </p>
+              <p className="font-display font-extrabold text-[#1a3a52] text-lg sm:text-xl leading-tight mt-0.5">
+                {displayName}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Bottom strip */}
         <div className="absolute inset-x-0 bottom-0 z-20 flex items-end justify-between gap-3 px-4 pb-3 pt-8 bg-gradient-to-t from-black/35 via-black/15 to-transparent">

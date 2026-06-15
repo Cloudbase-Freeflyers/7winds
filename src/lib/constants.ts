@@ -34,12 +34,32 @@ export const V2_IMAGES = {
   fieldFlightVertical: "/images/v2/field-flight-vertical.png",
 } as const;
 
+/** Pre-filled WhatsApp messages — Hebrew only; business name appears in the chat header. */
+export const WHATSAPP_MESSAGES = {
+  tandem: "שלום! אשמח לקבל פרטים על טיסת טנדם",
+  flight: "שלום! אשמח לקבל פרטים על טיסה",
+  greeting: "שלום!",
+  accessibility:
+    "שלום! אני מתעניין/ת בטיסה מותאמת, נשמח לתיאום אישי",
+} as const;
+
+const LRI = "\u2066";
+const PDI = "\u2069";
+
+/** Keep Latin letters and numbers in correct order inside Hebrew RTL text. */
+function bidiSafe(text: string): string {
+  return text.replace(/[A-Za-z0-9][A-Za-z0-9_\-]*/g, (match) => `${LRI}${match}${PDI}`);
+}
+
 export function whatsappMessage(
   message: string,
   affiliateCode?: string | null
 ): string {
-  if (!affiliateCode) return message;
-  return `${message}\n\nפנייה דרך שותף: ${affiliateCode}`;
+  let text = bidiSafe(message);
+  if (affiliateCode) {
+    text = `${text}\n\nפנייה דרך שותף: ${LRI}${affiliateCode}${PDI}`;
+  }
+  return text;
 }
 
 export function whatsappLink(

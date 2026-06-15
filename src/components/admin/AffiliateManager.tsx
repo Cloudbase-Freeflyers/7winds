@@ -25,6 +25,7 @@ export default function AffiliateManager() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [creating, setCreating] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -131,6 +132,7 @@ export default function AffiliateManager() {
       setNotes("");
       await load();
       setSelectedId(data.id);
+      setShowCreateForm(false);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "שגיאה");
     } finally {
@@ -230,8 +232,15 @@ export default function AffiliateManager() {
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1fr_380px]">
+    <div className="grid gap-8 lg:grid-cols-[1fr_400px]">
       <div>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 className="font-display text-lg font-extrabold">כל השותפים</h2>
+          <p className="text-sm text-brand-dark">
+            {rows.length} שותפים · לחצו על שורה לצפייה בפרטים
+          </p>
+        </div>
+
         {error && (
           <div className="mb-4 rounded-2xl bg-red-50 border border-red-200 p-4 text-red-800 text-sm">
             {error}
@@ -273,9 +282,12 @@ export default function AffiliateManager() {
               {rows.map((r) => (
                 <tr
                   key={r._id}
-                  onClick={() => setSelectedId(r._id)}
+                  onClick={() => {
+                    setSelectedId(r._id);
+                    setShowCreateForm(false);
+                  }}
                   className={`border-t border-black/5 cursor-pointer hover:bg-brand-soft/50 ${
-                    selectedId === r._id ? "bg-brand-sky/10" : ""
+                    selectedId === r._id && !showCreateForm ? "bg-brand-sky/10" : ""
                   }`}
                 >
                   <Td>{r.name}</Td>
@@ -310,12 +322,34 @@ export default function AffiliateManager() {
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+        <button
+          type="button"
+          onClick={() => {
+            setShowCreateForm(true);
+            setSelectedId(null);
+          }}
+          className="btn-primary btn-md w-full"
+        >
+          + הוסף שותף חדש
+        </button>
+
+        {showCreateForm && (
         <form
           onSubmit={createAffiliate}
           className="rounded-2xl bg-white ring-1 ring-black/5 p-5 shadow-sm"
         >
-          <h2 className="font-display text-lg font-extrabold">שותף חדש</h2>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-display text-lg font-extrabold">שותף חדש</h2>
+            <button
+              type="button"
+              onClick={() => setShowCreateForm(false)}
+              className="text-brand-dark/60 hover:text-brand-black text-xl leading-none"
+              aria-label="סגור"
+            >
+              ×
+            </button>
+          </div>
           <div className="mt-4 grid gap-3">
             <Field label="שם">
               <input
@@ -409,14 +443,114 @@ export default function AffiliateManager() {
             {creating ? "יוצר…" : "צור שותף + QR"}
           </button>
         </form>
+        )}
 
-        {selected && (
-          <div className="rounded-2xl bg-white ring-1 ring-black/5 p-5 shadow-sm">
-            <h2 className="font-display text-lg font-extrabold">{selected.name}</h2>
-            <p className="mt-1 text-xs text-brand-dark font-mono" dir="ltr">
-              {affiliateUrl(selected.code)}
+        {!showCreateForm && !selected && (
+          <div className="rounded-2xl bg-white ring-1 ring-black/5 p-8 shadow-sm text-center text-brand-dark">
+            <p className="text-4xl">🤝</p>
+            <p className="mt-3 font-bold text-brand-black">בחרו שותף מהרשימה</p>
+            <p className="mt-1 text-sm">
+              תראו QR, באנרים, כרטיסים להדפסה וקישורים לשיתוף
             </p>
-            <p className="mt-2 text-xs text-brand-dark">
+          </div>
+        )}
+
+        {!showCreateForm && selected && (
+          <div className="rounded-2xl bg-white ring-1 ring-black/5 p-5 shadow-sm space-y-5">
+            <div>
+              <h2 className="font-display text-lg font-extrabold">{selected.name}</h2>
+              <p className="mt-1 text-xs text-brand-dark font-mono break-all" dir="ltr">
+                {affiliateUrl(selected.code)}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <StatusBadge status={selected.status} />
+                <span className="text-xs text-brand-dark">
+                  עמלה: {formatCommission(selected.commissionRate, selected.commissionType)}
+                </span>
+              </div>
+            </div>
+
+            {/* Marketing assets */}
+            <div className="border border-black/5 rounded-xl p-4 bg-brand-soft/30">
+              <h3 className="font-bold text-sm">חומרי שיווק</h3>
+              <div className="mt-3 grid gap-2">
+                <AssetLink
+                  href={`/api/admin/affiliates/${selected._id}/qr`}
+                  download={`qr-${selected.code}.png`}
+                  label="📱 QR Code"
+                  sub="הורדת תמונת QR"
+                />
+                <AssetLink
+                  href={`/api/admin/affiliates/${selected._id}/banner`}
+                  target="_blank"
+                  label="🖼️ באנר שיווקי"
+                  sub="פתיחה / הדפסה / שמירה כ-PDF"
+                />
+                <AssetLink
+                  href={`/api/admin/affiliates/${selected._id}/card`}
+                  target="_blank"
+                  label="🪪 כרטיסים להדפסה"
+                  sub="4 כרטיסים לדף — PDF"
+                />
+                <button
+                  type="button"
+                  onClick={() => copyLink(selected.code)}
+                  className="flex items-center justify-between w-full rounded-xl bg-white ring-1 ring-black/5 px-4 py-3 text-start hover:bg-brand-soft/50 transition"
+                >
+                  <span>
+                    <span className="block font-bold text-sm">🔗 קישור לשיתוף</span>
+                    <span className="block text-xs text-brand-dark">העתקה ללוח</span>
+                  </span>
+                  <span className="text-brand-sky font-bold text-sm">העתק</span>
+                </button>
+                <a
+                  href={affiliateUrl(selected.code)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between w-full rounded-xl bg-white ring-1 ring-black/5 px-4 py-3 text-start hover:bg-brand-soft/50 transition"
+                >
+                  <span>
+                    <span className="block font-bold text-sm">👁️ צפייה בדף השותף</span>
+                    <span className="block text-xs text-brand-dark font-mono" dir="ltr">
+                      /a/{selected.code}
+                    </span>
+                  </span>
+                  <span className="text-brand-sky font-bold text-sm">פתח ↗</span>
+                </a>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/api/admin/affiliates/${selected._id}/qr`}
+                alt={`QR code for ${selected.code}`}
+                className="w-40 h-40 rounded-xl ring-1 ring-black/10"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <Stat label="ביקורים" value={selected.stats.visits} />
+              <Stat label="לידים" value={selected.stats.leads} />
+              <Stat label="שוברים" value={selected.stats.vouchers} />
+              <Stat label="וואטסאפ" value={selected.stats.whatsappClicks} />
+              <Stat
+                label="עמלה משוערת"
+                value={`₪${selected.stats.estimatedEarnings}`}
+              />
+              <Stat
+                label="יתרה לתשלום"
+                value={`₪${selected.stats.pendingBalance}`}
+                highlight
+              />
+            </div>
+
+            <details className="group">
+              <summary className="cursor-pointer font-bold text-sm text-brand-dark hover:text-brand-black">
+                ⚙️ עריכה וניהול
+              </summary>
+              <div className="mt-4 space-y-4">
+            <p className="text-xs text-brand-dark">
               כניסת שותף:{" "}
               <a
                 href="/affiliate/login"
@@ -428,19 +562,9 @@ export default function AffiliateManager() {
               </a>
             </p>
 
-            <p className="mt-2 text-sm text-brand-dark">
-              עמלה:{" "}
-              <span className="font-bold text-brand-black">
-                {formatCommission(selected.commissionRate, selected.commissionType)}
-              </span>
-              {selected.commissionType === "percent" && (
-                <span className="text-xs"> (מלידים ושוברים)</span>
-              )}
-            </p>
-
             <form
               onSubmit={saveAffiliateDetails}
-              className="mt-4 border border-black/5 rounded-xl p-4 bg-brand-soft/40"
+              className="border border-black/5 rounded-xl p-4 bg-brand-soft/40"
             >
               <h3 className="font-bold text-sm">עריכת פרטי שותף</h3>
               <div className="mt-3 grid gap-2">
@@ -504,7 +628,7 @@ export default function AffiliateManager() {
 
             <form
               onSubmit={saveCredentials}
-              className="mt-4 border border-black/5 rounded-xl p-4 bg-brand-soft/40"
+              className="border border-black/5 rounded-xl p-4 bg-brand-soft/40"
             >
               <h3 className="font-bold text-sm">פרטי כניסה לשותף</h3>
               <div className="mt-3 grid gap-2">
@@ -535,52 +659,7 @@ export default function AffiliateManager() {
               </button>
             </form>
 
-            <div className="mt-4 flex flex-col items-center gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`/api/admin/affiliates/${selected._id}/qr`}
-                alt={`QR code for ${selected.code}`}
-                className="w-48 h-48 rounded-xl ring-1 ring-black/10"
-              />
-              <div className="flex gap-2 w-full">
-                <button
-                  type="button"
-                  onClick={() => copyLink(selected.code)}
-                  className="btn-secondary btn-sm flex-1"
-                >
-                  העתק קישור
-                </button>
-                <a
-                  href={`/api/admin/affiliates/${selected._id}/qr`}
-                  download={`qr-${selected.code}.png`}
-                  className="btn-primary btn-sm flex-1 text-center"
-                >
-                  הורד QR
-                </a>
-              </div>
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-              <Stat label="ביקורים" value={selected.stats.visits} />
-              <Stat label="לידים" value={selected.stats.leads} />
-              <Stat label="שוברים" value={selected.stats.vouchers} />
-              <Stat label="וואטסאפ" value={selected.stats.whatsappClicks} />
-              <Stat
-                label="עמלה משוערת"
-                value={`₪${selected.stats.estimatedEarnings}`}
-              />
-              <Stat
-                label="שולם עד כה"
-                value={`₪${selected.totalPaid}`}
-              />
-              <Stat
-                label="יתרה לתשלום"
-                value={`₪${selected.stats.pendingBalance}`}
-                highlight
-              />
-            </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 disabled={saving}
@@ -610,7 +689,7 @@ export default function AffiliateManager() {
               </button>
             </div>
 
-            <form onSubmit={recordPayout} className="mt-4 border-t border-black/5 pt-4">
+            <form onSubmit={recordPayout} className="border-t border-black/5 pt-4">
               <h3 className="font-bold text-sm">רישום תשלום</h3>
               <div className="mt-2 grid gap-2">
                 <input
@@ -637,10 +716,42 @@ export default function AffiliateManager() {
                 {saving ? "שומר…" : "רשום תשלום"}
               </button>
             </form>
+              </div>
+            </details>
           </div>
         )}
       </div>
     </div>
+  );
+}
+
+function AssetLink({
+  href,
+  label,
+  sub,
+  download,
+  target,
+}: {
+  href: string;
+  label: string;
+  sub: string;
+  download?: string;
+  target?: string;
+}) {
+  return (
+    <a
+      href={href}
+      download={download}
+      target={target}
+      rel={target === "_blank" ? "noopener noreferrer" : undefined}
+      className="flex items-center justify-between w-full rounded-xl bg-white ring-1 ring-black/5 px-4 py-3 text-start hover:bg-brand-soft/50 transition"
+    >
+      <span>
+        <span className="block font-bold text-sm">{label}</span>
+        <span className="block text-xs text-brand-dark">{sub}</span>
+      </span>
+      <span className="text-brand-sky font-bold text-sm">↓</span>
+    </a>
   );
 }
 

@@ -7,7 +7,15 @@ import { VOUCHER_OCCASIONS, VOUCHER_PACKAGES } from "@/lib/constants";
 
 type State = "idle" | "submitting" | "error";
 
-export default function VoucherForm() {
+type Props = {
+  onRecipientNameChange?: (name: string) => void;
+  onOccasionChange?: (occasion: string) => void;
+};
+
+export default function VoucherForm({
+  onRecipientNameChange,
+  onOccasionChange,
+}: Props) {
   const [state, setState] = useState<State>("idle");
   const [error, setError] = useState<string | null>(null);
   const affiliateCode = useAffiliateCode();
@@ -145,6 +153,7 @@ export default function VoucherForm() {
             label="שם המקבל/ת (לא חובה)"
             name="recipientName"
             placeholder="למי השובר?"
+            onChange={(e) => onRecipientNameChange?.(e.target.value)}
           />
           <div>
             <label className="block text-sm font-bold text-brand-black mb-1.5">
@@ -153,6 +162,7 @@ export default function VoucherForm() {
             <select
               name="occasion"
               defaultValue=""
+              onChange={(e) => onOccasionChange?.(e.target.value)}
               className="w-full rounded-xl border border-[#d4c4a8]/60 bg-white/90 px-4 py-3 text-brand-black focus:border-brand-sky focus:outline-none focus:ring-4 focus:ring-brand-sky/20 transition"
             >
               <option value="">— לא רלוונטי —</option>

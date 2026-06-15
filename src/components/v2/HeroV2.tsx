@@ -1,8 +1,8 @@
 import Image from "next/image";
 import AffiliateWhatsAppLink from "@/components/AffiliateWhatsAppLink";
-import { V2_IMAGES } from "@/lib/constants";
+import { V2_IMAGES, WHATSAPP_MESSAGES } from "@/lib/constants";
 
-const waMessage = "היי 7Winds! אשמח לפרטים על טיסת טנדם 🪂";
+const waMessage = WHATSAPP_MESSAGES.tandem;
 
 export default function HeroV2() {
   return (
@@ -54,7 +54,7 @@ export default function HeroV2() {
           </p>
 
           <div className="mt-7 flex flex-col sm:flex-row justify-center lg:justify-start gap-3">
-            <a href="#contact" className="btn-primary btn-lg w-full sm:w-auto text-center">
+            <a href="#booking" className="btn-primary btn-lg w-full sm:w-auto text-center">
               קבעו טיסה עכשיו
             </a>
             <AffiliateWhatsAppLink

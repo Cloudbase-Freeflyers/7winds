@@ -26,6 +26,7 @@ export interface VoucherDoc {
   package: "10min" | "20min" | "acro" | "golan" | "gilboa" | "media";
   notes?: string;
   orderType?: "voucher" | "direct";
+  bookingAudience?: "solo" | "group";
   amount?: number;
   paymentStatus?: PaymentStatus;
   icountConfirmationCode?: string;

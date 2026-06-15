@@ -30,6 +30,9 @@ export async function GET(req: Request) {
         amount: order.amount ?? null,
         orderType: order.orderType ?? null,
         buyerName: order.buyerName,
+        recipientName: order.recipientName ?? null,
+        occasion: order.occasion ?? null,
+        bookingAudience: order.bookingAudience ?? null,
       },
     });
   } catch (err) {

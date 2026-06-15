@@ -1,9 +1,8 @@
 import Image from "next/image";
 import AffiliateWhatsAppLink from "@/components/AffiliateWhatsAppLink";
-import { ACCESSIBILITY_BULLETS } from "@/lib/constants";
+import { ACCESSIBILITY_BULLETS, WHATSAPP_MESSAGES } from "@/lib/constants";
 
-const WA_MESSAGE =
-  "היי 7Winds! אני מתעניין/ת בטיסה מותאמת — נשמח לתיאום אישי 🙏";
+const WA_MESSAGE = WHATSAPP_MESSAGES.accessibility;
 
 export default function Accessibility() {
 

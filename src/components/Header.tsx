@@ -6,7 +6,7 @@ const NAV = [
   { href: "#experience", label: "החוויה" },
   { href: "#voucher", label: "שוברי מתנה" },
   { href: "#accessibility", label: "נגישות" },
-  { href: "#contact", label: "צרו קשר" },
+  { href: "#booking", label: "קביעת טיסה" },
 ];
 
 export default function Header() {
@@ -34,7 +34,7 @@ export default function Header() {
             </a>
           ))}
         </nav>
-        <a href="#contact" className="btn btn-primary btn-md hidden sm:inline-flex">
+        <a href="#booking" className="btn btn-primary btn-md hidden sm:inline-flex">
           קבעו טיסה
         </a>
       </div>
