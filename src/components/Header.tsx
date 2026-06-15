@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { BRAND } from "@/lib/constants";
 
 const NAV = [
   { href: "#pricing", label: "מחירים" },
@@ -15,12 +16,13 @@ export default function Header() {
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-4 px-5 sm:px-8 py-3">
         <Link href="#top" className="flex items-center gap-3" aria-label="7Winds">
           <Image
-            src="/logo.png"
+            src={BRAND.logo}
             alt="7Winds Paragliding Club"
-            width={140}
+            width={48}
             height={48}
             priority
-            className="h-10 w-auto"
+            className="h-10 w-10"
+            unoptimized
           />
         </Link>
         <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-brand-dark">

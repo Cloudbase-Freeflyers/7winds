@@ -1,7 +1,6 @@
 import Image from "next/image";
 import AffiliateWhatsAppLink from "@/components/AffiliateWhatsAppLink";
-import { WHATSAPP_MESSAGES } from "@/lib/constants";
-import { CONTACT } from "@/lib/constants";
+import { BRAND, CONTACT, WHATSAPP_MESSAGES } from "@/lib/constants";
 
 export default function Footer() {
   return (
@@ -9,11 +8,12 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto px-5 sm:px-8 py-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3 items-start">
         <div>
           <Image
-            src="/logo.png"
+            src={BRAND.logo}
             alt="7Winds Paragliding Club"
-            width={150}
-            height={52}
-            className="h-12 w-auto bg-white rounded-xl p-2"
+            width={48}
+            height={48}
+            className="h-12 w-12 bg-white rounded-xl p-2"
+            unoptimized
           />
           <p className="mt-4 text-sm leading-relaxed text-white/70">
             7Winds — בית הספר הגדול בישראל למצנחי רחיפה. טיסות חוויה, קורסים,
