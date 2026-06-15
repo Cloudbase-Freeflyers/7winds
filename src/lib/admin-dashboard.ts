@@ -22,6 +22,13 @@ export const MAIN_MARKETING_PAGES: MarketingPageLink[] = [
     type: "main",
   },
   {
+    id: "dev",
+    label: "דף בדיקות (dev)",
+    path: "/dev",
+    description: "בדיקת checkout — ₪5 · noindex",
+    type: "main",
+  },
+  {
     id: "pricing",
     label: "מחירים",
     path: "/#pricing",
@@ -56,8 +63,8 @@ export const MAIN_MARKETING_PAGES: MarketingPageLink[] = [
   {
     id: "contact",
     label: "צור קשר",
-    path: "/#contact",
-    description: "טופס לידים ווואטסאפ",
+    path: "/#booking",
+    description: "טופס הזמנה ותשלום",
     type: "section",
   },
   {

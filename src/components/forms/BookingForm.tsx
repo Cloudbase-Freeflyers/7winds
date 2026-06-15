@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { track } from "@/lib/analytics";
+import GiftVoucherBanner from "@/components/GiftVoucherBanner";
 import {
+  DEV_TEST_PACKAGE,
   VOUCHER_PACKAGES,
   type ProductPackage,
 } from "@/lib/constants";
@@ -11,7 +13,11 @@ import { useAffiliateCode } from "@/context/AffiliateContext";
 type State = "idle" | "submitting" | "error";
 type BookingAudience = "solo" | "group";
 
-export default function BookingForm() {
+export default function BookingForm({
+  includeTestPackage = false,
+}: {
+  includeTestPackage?: boolean;
+}) {
   const [state, setState] = useState<State>("idle");
   const [error, setError] = useState<string | null>(null);
   const [audience, setAudience] = useState<BookingAudience>("solo");
@@ -55,15 +61,7 @@ export default function BookingForm() {
       className="rounded-3xl bg-brand-soft ring-1 ring-black/5 p-7 sm:p-8 shadow-sm"
       noValidate
     >
-      {/* Gift banner */}
-      <div className="mb-5 rounded-2xl bg-brand-yellow/20 border border-brand-yellow/40 px-4 py-3 text-sm text-brand-black">
-        🎁 רוכשים{" "}
-        <span className="font-bold">מתנה</span> לחבר/ה או בן/בת זוג?{" "}
-        <a href="#voucher" className="font-bold text-brand-sky underline hover:brightness-110">
-          לחצו כאן
-        </a>{" "}
-        לרכישת שובר מתנה.
-      </div>
+      <GiftVoucherBanner className="mb-5" />
 
       {/* Solo / Group toggle */}
       <fieldset className="mb-5">
@@ -109,6 +107,9 @@ export default function BookingForm() {
             <option value="" disabled>
               בחרו מסלול…
             </option>
+            {includeTestPackage && (
+              <option value={DEV_TEST_PACKAGE.value}>{DEV_TEST_PACKAGE.label}</option>
+            )}
             {VOUCHER_PACKAGES.map((p) => (
               <option key={p.value} value={p.value}>
                 {p.label}

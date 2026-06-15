@@ -45,6 +45,7 @@ export default function AffiliateManager() {
   const [credentialEmail, setCredentialEmail] = useState("");
   const [credentialPassword, setCredentialPassword] = useState("");
   const [editName, setEditName] = useState("");
+  const [editCode, setEditCode] = useState("");
   const [editPhone, setEditPhone] = useState("");
   const [editCommissionRate, setEditCommissionRate] = useState("10");
   const [editCommissionType, setEditCommissionType] = useState<"percent" | "fixed">(
@@ -52,6 +53,8 @@ export default function AffiliateManager() {
   );
   const [editNotes, setEditNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [panelMode, setPanelMode] = useState<"view" | "edit">("view");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -79,15 +82,18 @@ export default function AffiliateManager() {
       setCredentialEmail("");
       setCredentialPassword("");
       setEditName("");
+      setEditCode("");
       setEditPhone("");
       setEditCommissionRate("10");
       setEditCommissionType("percent");
       setEditNotes("");
+      setPanelMode("view");
       return;
     }
     setCredentialEmail(selected.email || "");
     setCredentialPassword("");
     setEditName(selected.name);
+    setEditCode(selected.code);
     setEditPhone(selected.phone || "");
     setEditCommissionRate(String(selected.commissionRate));
     setEditCommissionType(selected.commissionType);
@@ -211,11 +217,13 @@ export default function AffiliateManager() {
     try {
       await updateAffiliate(selected._id, {
         name: editName,
+        code: editCode,
         phone: editPhone,
         commissionRate: Number(editCommissionRate),
         commissionType: editCommissionType,
         notes: editNotes,
       });
+      setPanelMode("view");
     } catch {
       // updateAffiliate already alerts
     } finally {
@@ -229,6 +237,35 @@ export default function AffiliateManager() {
 
   function copyLink(code: string) {
     navigator.clipboard.writeText(affiliateUrl(code)).catch(() => {});
+  }
+
+  async function deleteAffiliate(id: string, name: string) {
+    const confirmed = window.confirm(
+      `למחוק את השותף "${name}"?\n\nפעולה זו בלתי הפיכה. נתוני המעקב (ביקורים, לידים) יישמרו במערכת.`
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/affiliates/${id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "מחיקה נכשלה");
+      setSelectedId(null);
+      setPanelMode("view");
+      await load();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "שגיאה");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  function selectAffiliate(id: string, mode: "view" | "edit" = "view") {
+    setSelectedId(id);
+    setShowCreateForm(false);
+    setPanelMode(mode);
   }
 
   return (
@@ -262,19 +299,20 @@ export default function AffiliateManager() {
                 <Th>עמלה משוערת</Th>
                 <Th>יתרה</Th>
                 <Th>תשלום</Th>
+                <Th>פעולות</Th>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={11} className="px-4 py-8 text-center text-brand-dark">
+                  <td colSpan={12} className="px-4 py-8 text-center text-brand-dark">
                     טוען…
                   </td>
                 </tr>
               )}
               {!loading && rows.length === 0 && (
                 <tr>
-                  <td colSpan={11} className="px-4 py-8 text-center text-brand-dark">
+                  <td colSpan={12} className="px-4 py-8 text-center text-brand-dark">
                     אין שותפים עדיין
                   </td>
                 </tr>
@@ -282,10 +320,7 @@ export default function AffiliateManager() {
               {rows.map((r) => (
                 <tr
                   key={r._id}
-                  onClick={() => {
-                    setSelectedId(r._id);
-                    setShowCreateForm(false);
-                  }}
+                  onClick={() => selectAffiliate(r._id, "view")}
                   className={`border-t border-black/5 cursor-pointer hover:bg-brand-soft/50 ${
                     selectedId === r._id && !showCreateForm ? "bg-brand-sky/10" : ""
                   }`}
@@ -315,6 +350,30 @@ export default function AffiliateManager() {
                   <Td>
                     <PayoutBadge status={r.payoutStatus} />
                   </Td>
+                  <Td>
+                    <div
+                      className="flex items-center gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        type="button"
+                        title="עריכה"
+                        onClick={() => selectAffiliate(r._id, "edit")}
+                        className="rounded-lg px-2 py-1 text-xs font-bold text-brand-sky hover:bg-brand-sky/10 transition"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        type="button"
+                        title="מחק"
+                        disabled={deleting}
+                        onClick={() => deleteAffiliate(r._id, r.name)}
+                        className="rounded-lg px-2 py-1 text-xs font-bold text-red-600 hover:bg-red-50 transition disabled:opacity-50"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </Td>
                 </tr>
               ))}
             </tbody>
@@ -328,6 +387,7 @@ export default function AffiliateManager() {
           onClick={() => {
             setShowCreateForm(true);
             setSelectedId(null);
+            setPanelMode("view");
           }}
           className="btn-primary btn-md w-full"
         >
@@ -457,19 +517,230 @@ export default function AffiliateManager() {
 
         {!showCreateForm && selected && (
           <div className="rounded-2xl bg-white ring-1 ring-black/5 p-5 shadow-sm space-y-5">
-            <div>
-              <h2 className="font-display text-lg font-extrabold">{selected.name}</h2>
-              <p className="mt-1 text-xs text-brand-dark font-mono break-all" dir="ltr">
-                {affiliateUrl(selected.code)}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                <StatusBadge status={selected.status} />
-                <span className="text-xs text-brand-dark">
-                  עמלה: {formatCommission(selected.commissionRate, selected.commissionType)}
-                </span>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="font-display text-lg font-extrabold">{selected.name}</h2>
+                <p className="mt-1 text-xs text-brand-dark font-mono break-all" dir="ltr">
+                  {affiliateUrl(selected.code)}
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <StatusBadge status={selected.status} />
+                  <span className="text-xs text-brand-dark">
+                    עמלה: {formatCommission(selected.commissionRate, selected.commissionType)}
+                  </span>
+                </div>
+              </div>
+              <div className="flex shrink-0 gap-1">
+                <button
+                  type="button"
+                  onClick={() => setPanelMode(panelMode === "edit" ? "view" : "edit")}
+                  className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition ${
+                    panelMode === "edit"
+                      ? "bg-brand-sky text-white"
+                      : "text-brand-sky hover:bg-brand-sky/10"
+                  }`}
+                >
+                  ✏️ עריכה
+                </button>
+                <button
+                  type="button"
+                  disabled={deleting}
+                  onClick={() => deleteAffiliate(selected._id, selected.name)}
+                  className="rounded-lg px-2.5 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 transition disabled:opacity-50"
+                >
+                  🗑️ מחק
+                </button>
               </div>
             </div>
 
+            {panelMode === "edit" ? (
+              <div className="space-y-4">
+                <form
+                  onSubmit={saveAffiliateDetails}
+                  className="border border-black/5 rounded-xl p-4 bg-brand-soft/40"
+                >
+                  <h3 className="font-bold text-sm">עריכת פרטי שותף</h3>
+                  <div className="mt-3 grid gap-2">
+                    <Field label="שם">
+                      <input
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        required
+                        className={inputCls}
+                      />
+                    </Field>
+                    <Field label="קוד (ב-URL)">
+                      <input
+                        value={editCode}
+                        onChange={(e) => setEditCode(slugifyCode(e.target.value))}
+                        required
+                        dir="ltr"
+                        className={inputCls}
+                      />
+                    </Field>
+                    <Field label="טלפון">
+                      <input
+                        value={editPhone}
+                        onChange={(e) => setEditPhone(e.target.value)}
+                        dir="ltr"
+                        className={inputCls}
+                      />
+                    </Field>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Field label="עמלה">
+                        <input
+                          type="number"
+                          min={0}
+                          value={editCommissionRate}
+                          onChange={(e) => setEditCommissionRate(e.target.value)}
+                          required
+                          className={inputCls}
+                        />
+                      </Field>
+                      <Field label="סוג עמלה">
+                        <select
+                          value={editCommissionType}
+                          onChange={(e) =>
+                            setEditCommissionType(e.target.value as "percent" | "fixed")
+                          }
+                          className={inputCls}
+                        >
+                          <option value="percent">אחוזים %</option>
+                          <option value="fixed">סכום קבוע ₪</option>
+                        </select>
+                      </Field>
+                    </div>
+                    <Field label="הערות">
+                      <textarea
+                        value={editNotes}
+                        onChange={(e) => setEditNotes(e.target.value)}
+                        rows={2}
+                        className={inputCls}
+                      />
+                    </Field>
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="btn-primary btn-sm flex-1"
+                    >
+                      {saving ? "שומר…" : "שמור שינויים"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPanelMode("view")}
+                      className="btn-secondary btn-sm"
+                    >
+                      ביטול
+                    </button>
+                  </div>
+                </form>
+
+                <form
+                  onSubmit={saveCredentials}
+                  className="border border-black/5 rounded-xl p-4 bg-brand-soft/40"
+                >
+                  <h3 className="font-bold text-sm">פרטי כניסה לשותף</h3>
+                  <p className="text-xs text-brand-dark mt-1">
+                    כניסה:{" "}
+                    <a
+                      href="/affiliate/login"
+                      className="text-brand-sky font-bold underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      /affiliate/login
+                    </a>
+                  </p>
+                  <div className="mt-3 grid gap-2">
+                    <input
+                      type="email"
+                      value={credentialEmail}
+                      onChange={(e) => setCredentialEmail(e.target.value)}
+                      dir="ltr"
+                      placeholder="אימייל"
+                      className={inputCls}
+                    />
+                    <input
+                      type="password"
+                      value={credentialPassword}
+                      onChange={(e) => setCredentialPassword(e.target.value)}
+                      dir="ltr"
+                      placeholder="סיסמה חדשה (השאר ריק לשמירה)"
+                      className={inputCls}
+                      minLength={8}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="mt-3 btn-secondary btn-sm w-full"
+                  >
+                    {saving ? "שומר…" : "שמור פרטי כניסה"}
+                  </button>
+                </form>
+
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() =>
+                      updateAffiliate(selected._id, {
+                        status: selected.status === "active" ? "inactive" : "active",
+                      })
+                    }
+                    className="btn-secondary btn-sm"
+                  >
+                    {selected.status === "active" ? "השבת" : "הפעל"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() =>
+                      updateAffiliate(selected._id, {
+                        payoutStatus:
+                          selected.payoutStatus === "pending" ? "none" : "pending",
+                      })
+                    }
+                    className="btn-secondary btn-sm"
+                  >
+                    {selected.payoutStatus === "pending"
+                      ? "בטל ממתין לתשלום"
+                      : "סמן ממתין לתשלום"}
+                  </button>
+                </div>
+
+                <form onSubmit={recordPayout} className="border-t border-black/5 pt-4">
+                  <h3 className="font-bold text-sm">רישום תשלום</h3>
+                  <div className="mt-2 grid gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      value={payoutAmount}
+                      onChange={(e) => setPayoutAmount(e.target.value)}
+                      required
+                      placeholder="סכום ₪"
+                      className={inputCls}
+                    />
+                    <input
+                      value={payoutNotes}
+                      onChange={(e) => setPayoutNotes(e.target.value)}
+                      placeholder="הערה (אופציונלי)"
+                      className={inputCls}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="mt-3 btn-primary btn-sm w-full"
+                  >
+                    {saving ? "שומר…" : "רשום תשלום"}
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <>
             {/* Marketing assets */}
             <div className="border border-black/5 rounded-xl p-4 bg-brand-soft/30">
               <h3 className="font-bold text-sm">חומרי שיווק</h3>
@@ -547,177 +818,70 @@ export default function AffiliateManager() {
 
             <details className="group">
               <summary className="cursor-pointer font-bold text-sm text-brand-dark hover:text-brand-black">
-                ⚙️ עריכה וניהול
+                ⚙️ ניהול מתקדם (תשלומים, השבתה)
               </summary>
               <div className="mt-4 space-y-4">
-            <p className="text-xs text-brand-dark">
-              כניסת שותף:{" "}
-              <a
-                href="/affiliate/login"
-                className="text-brand-sky font-bold underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                /affiliate/login
-              </a>
-            </p>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() =>
+                      updateAffiliate(selected._id, {
+                        status: selected.status === "active" ? "inactive" : "active",
+                      })
+                    }
+                    className="btn-secondary btn-sm"
+                  >
+                    {selected.status === "active" ? "השבת" : "הפעל"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={() =>
+                      updateAffiliate(selected._id, {
+                        payoutStatus:
+                          selected.payoutStatus === "pending" ? "none" : "pending",
+                      })
+                    }
+                    className="btn-secondary btn-sm"
+                  >
+                    {selected.payoutStatus === "pending"
+                      ? "בטל ממתין לתשלום"
+                      : "סמן ממתין לתשלום"}
+                  </button>
+                </div>
 
-            <form
-              onSubmit={saveAffiliateDetails}
-              className="border border-black/5 rounded-xl p-4 bg-brand-soft/40"
-            >
-              <h3 className="font-bold text-sm">עריכת פרטי שותף</h3>
-              <div className="mt-3 grid gap-2">
-                <Field label="שם">
-                  <input
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    required
-                    className={inputCls}
-                  />
-                </Field>
-                <Field label="טלפון">
-                  <input
-                    value={editPhone}
-                    onChange={(e) => setEditPhone(e.target.value)}
-                    dir="ltr"
-                    className={inputCls}
-                  />
-                </Field>
-                <div className="grid grid-cols-2 gap-2">
-                  <Field label="עמלה">
+                <form onSubmit={recordPayout} className="border-t border-black/5 pt-4">
+                  <h3 className="font-bold text-sm">רישום תשלום</h3>
+                  <div className="mt-2 grid gap-2">
                     <input
                       type="number"
-                      min={0}
-                      value={editCommissionRate}
-                      onChange={(e) => setEditCommissionRate(e.target.value)}
+                      min={1}
+                      value={payoutAmount}
+                      onChange={(e) => setPayoutAmount(e.target.value)}
                       required
+                      placeholder="סכום ₪"
                       className={inputCls}
                     />
-                  </Field>
-                  <Field label="סוג עמלה">
-                    <select
-                      value={editCommissionType}
-                      onChange={(e) =>
-                        setEditCommissionType(e.target.value as "percent" | "fixed")
-                      }
+                    <input
+                      value={payoutNotes}
+                      onChange={(e) => setPayoutNotes(e.target.value)}
+                      placeholder="הערה (אופציונלי)"
                       className={inputCls}
-                    >
-                      <option value="percent">אחוזים %</option>
-                      <option value="fixed">סכום קבוע ₪</option>
-                    </select>
-                  </Field>
-                </div>
-                <Field label="הערות">
-                  <textarea
-                    value={editNotes}
-                    onChange={(e) => setEditNotes(e.target.value)}
-                    rows={2}
-                    className={inputCls}
-                  />
-                </Field>
-              </div>
-              <button
-                type="submit"
-                disabled={saving}
-                className="mt-3 btn-primary btn-sm w-full"
-              >
-                {saving ? "שומר…" : "שמור פרטי שותף"}
-              </button>
-            </form>
-
-            <form
-              onSubmit={saveCredentials}
-              className="border border-black/5 rounded-xl p-4 bg-brand-soft/40"
-            >
-              <h3 className="font-bold text-sm">פרטי כניסה לשותף</h3>
-              <div className="mt-3 grid gap-2">
-                <input
-                  type="email"
-                  value={credentialEmail}
-                  onChange={(e) => setCredentialEmail(e.target.value)}
-                  dir="ltr"
-                  placeholder="אימייל"
-                  className={inputCls}
-                />
-                <input
-                  type="password"
-                  value={credentialPassword}
-                  onChange={(e) => setCredentialPassword(e.target.value)}
-                  dir="ltr"
-                  placeholder="סיסמה חדשה (השאר ריק לשמירה)"
-                  className={inputCls}
-                  minLength={8}
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={saving}
-                className="mt-3 btn-secondary btn-sm w-full"
-              >
-                {saving ? "שומר…" : "שמור פרטי כניסה"}
-              </button>
-            </form>
-
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                disabled={saving}
-                onClick={() =>
-                  updateAffiliate(selected._id, {
-                    status: selected.status === "active" ? "inactive" : "active",
-                  })
-                }
-                className="btn-secondary btn-sm"
-              >
-                {selected.status === "active" ? "השבת" : "הפעל"}
-              </button>
-              <button
-                type="button"
-                disabled={saving}
-                onClick={() =>
-                  updateAffiliate(selected._id, {
-                    payoutStatus:
-                      selected.payoutStatus === "pending" ? "none" : "pending",
-                  })
-                }
-                className="btn-secondary btn-sm"
-              >
-                {selected.payoutStatus === "pending"
-                  ? "בטל ממתין לתשלום"
-                  : "סמן ממתין לתשלום"}
-              </button>
-            </div>
-
-            <form onSubmit={recordPayout} className="border-t border-black/5 pt-4">
-              <h3 className="font-bold text-sm">רישום תשלום</h3>
-              <div className="mt-2 grid gap-2">
-                <input
-                  type="number"
-                  min={1}
-                  value={payoutAmount}
-                  onChange={(e) => setPayoutAmount(e.target.value)}
-                  required
-                  placeholder="סכום ₪"
-                  className={inputCls}
-                />
-                <input
-                  value={payoutNotes}
-                  onChange={(e) => setPayoutNotes(e.target.value)}
-                  placeholder="הערה (אופציונלי)"
-                  className={inputCls}
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={saving}
-                className="mt-3 btn-primary btn-sm w-full"
-              >
-                {saving ? "שומר…" : "רשום תשלום"}
-              </button>
-            </form>
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="mt-3 btn-primary btn-sm w-full"
+                  >
+                    {saving ? "שומר…" : "רשום תשלום"}
+                  </button>
+                </form>
               </div>
             </details>
+              </>
+            )}
           </div>
         )}
       </div>

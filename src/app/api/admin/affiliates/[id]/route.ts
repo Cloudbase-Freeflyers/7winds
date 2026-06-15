@@ -33,6 +33,7 @@ export async function PATCH(req: Request, { params }: Params) {
     updatedAt: new Date(),
   };
   if (parsed.data.name !== undefined) updates.name = parsed.data.name;
+  if (parsed.data.code !== undefined) updates.code = parsed.data.code;
   if (parsed.data.phone !== undefined)
     updates.phone = parsed.data.phone || undefined;
   if (parsed.data.commissionRate !== undefined)
@@ -61,6 +62,18 @@ export async function PATCH(req: Request, { params }: Params) {
 
     if (!existing) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+    }
+
+    if (parsed.data.code && parsed.data.code !== existing.code) {
+      const codeTaken = await db
+        .collection<AffiliateDoc>("affiliates")
+        .findOne({ code: parsed.data.code, _id: { $ne: new ObjectId(id) } });
+      if (codeTaken) {
+        return NextResponse.json(
+          { ok: false, error: "קוד שותף כבר קיים" },
+          { status: 409 }
+        );
+      }
     }
 
     const nextEmail =
@@ -121,13 +134,9 @@ export async function DELETE(_req: Request, { params }: Params) {
     const db = await getDb();
     const result = await db
       .collection<AffiliateDoc>("affiliates")
-      .findOneAndUpdate(
-        { _id: new ObjectId(id) },
-        { $set: { status: "inactive", updatedAt: new Date() } },
-        { returnDocument: "after" }
-      );
+      .deleteOne({ _id: new ObjectId(id) });
 
-    if (!result) {
+    if (result.deletedCount === 0) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
     }
 
@@ -135,7 +144,7 @@ export async function DELETE(_req: Request, { params }: Params) {
   } catch (err) {
     console.error("[admin/affiliates DELETE]", err);
     return NextResponse.json(
-      { ok: false, error: "השבתה נכשלה" },
+      { ok: false, error: "מחיקה נכשלה" },
       { status: 500 }
     );
   }

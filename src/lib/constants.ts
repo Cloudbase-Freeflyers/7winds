@@ -105,7 +105,7 @@ export const VOUCHER_PACKAGES = [
 export type VoucherPackage = (typeof VOUCHER_PACKAGES)[number]["value"];
 
 /** Direct-checkout packages (flights + add-ons) */
-export type ProductPackage = VoucherPackage | "media";
+export type ProductPackage = VoucherPackage | "media" | "test";
 
 export const PACKAGE_PRICES: Record<ProductPackage, number> = {
   "10min": 300,
@@ -114,6 +114,7 @@ export const PACKAGE_PRICES: Record<ProductPackage, number> = {
   golan: 750,
   gilboa: 750,
   media: 150,
+  test: 5,
 };
 
 export const PACKAGE_INVOICE_DESCRIPTIONS: Record<ProductPackage, string> = {
@@ -123,6 +124,7 @@ export const PACKAGE_INVOICE_DESCRIPTIONS: Record<ProductPackage, string> = {
   golan: "שובר מתנה — טיסת טנדם רמת הגולן — 7Winds",
   gilboa: "שובר מתנה — טיסת טנדם גלבוע — 7Winds",
   media: "תוספת צילום וידאו / תמונות — 7Winds",
+  test: "בדיקת תשלום — 7Winds (dev)",
 };
 
 export const PACKAGE_LABELS: Record<ProductPackage, string> = {
@@ -132,6 +134,14 @@ export const PACKAGE_LABELS: Record<ProductPackage, string> = {
   golan: "טיסת טנדם — רמת הגולן — ₪750",
   gilboa: "טיסת טנדם — גלבוע — ₪750",
   media: "תוספת צילום וידאו / תמונות — ₪150",
+  test: "🧪 בדיקת תשלום — ₪5",
+};
+
+/** Dev-only checkout item — shown on /dev only */
+export const DEV_TEST_PACKAGE = {
+  value: "test" as const,
+  label: "🧪 בדיקת תשלום — ₪5",
+  price: "₪5",
 };
 
 export const VOUCHER_OCCASIONS = [

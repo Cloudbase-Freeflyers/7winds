@@ -17,15 +17,28 @@ import HeroV2 from "@/components/v2/HeroV2";
 import VideoSectionV2 from "@/components/v2/VideoSectionV2";
 import FlightExperienceV2 from "@/components/v2/FlightExperienceV2";
 
-export default function LandingPageV2() {
+type Props = {
+  /** Enables dev-only test checkout (₪5) — use on /dev only */
+  dev?: boolean;
+};
+
+export default function LandingPageV2({ dev = false }: Props) {
   return (
     <>
       <Header />
+      {dev && (
+        <div
+          className="bg-amber-400 text-amber-950 text-center text-sm font-bold px-4 py-2"
+          role="status"
+        >
+          🧪 דף בדיקות — כולל מסלול תשלום בדיקה ב-₪5 · לא לשיתוף עם לקוחות
+        </div>
+      )}
       <main>
         <HeroV2 />
         <StatsBar />
         <VideoSectionV2 />
-        <Pricing />
+        <Pricing includeTestPackage={dev} />
         <FlightExperienceV2 />
         <WhyChooseUs />
         <GiftVoucher />
@@ -36,7 +49,7 @@ export default function LandingPageV2() {
         <TripAdvisorReviews />
         <FAQ />
         <ViralCopy />
-        <ContactSection />
+        <ContactSection includeTestPackage={dev} />
       </main>
       <Footer />
       <StickyWhatsApp />

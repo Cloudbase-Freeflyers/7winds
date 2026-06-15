@@ -38,7 +38,7 @@ const emailSchema = z
 
 export const checkoutSchema = z.object({
   type: z.enum(["voucher", "direct"]),
-  package: z.enum(["10min", "20min", "acro", "golan", "gilboa", "media"]),
+  package: z.enum(["10min", "20min", "acro", "golan", "gilboa", "media", "test"]),
   buyerName: z.string().trim().min(2, "נא להזין שם מלא").max(80),
   buyerPhone: z
     .string()
@@ -102,6 +102,16 @@ export const affiliateCreateSchema = z
 
 export const affiliateUpdateSchema = z.object({
   name: z.string().trim().min(2).max(80).optional(),
+  code: z
+    .string()
+    .trim()
+    .min(2)
+    .max(40)
+    .regex(
+      /^[a-z0-9-]+$/,
+      "קוד יכול להכיל אותיות אנגליות קטנות, מספרים ומקפים בלבד"
+    )
+    .optional(),
   email: affiliateEmailSchema.optional().or(z.literal("")),
   password: affiliatePasswordSchema.optional().or(z.literal("")),
   phone: z.string().trim().max(30).optional().or(z.literal("")),
@@ -121,4 +131,39 @@ export const affiliatePayoutSchema = z.object({
   amount: z.coerce.number().positive("סכום חייב להיות חיובי"),
   payoutStatus: z.enum(["pending", "paid"]).default("paid"),
   notes: z.string().trim().max(500).optional().or(z.literal("")),
+});
+
+export const adminLeadUpdateSchema = z.object({
+  name: z.string().trim().min(2).max(80).optional(),
+  phone: z
+    .string()
+    .trim()
+    .regex(phoneRegex, "מספר טלפון לא תקין")
+    .optional(),
+  message: z.string().trim().max(1000).optional().or(z.literal("")),
+  status: z
+    .enum(["new", "contacted", "scheduled", "completed", "cancelled"])
+    .optional(),
+});
+
+export const adminVoucherUpdateSchema = z.object({
+  buyerName: z.string().trim().min(2).max(80).optional(),
+  buyerPhone: z
+    .string()
+    .trim()
+    .regex(phoneRegex, "מספר טלפון לא תקין")
+    .optional(),
+  buyerEmail: emailSchema.optional().or(z.literal("")),
+  recipientName: z.string().trim().max(80).optional().or(z.literal("")),
+  occasion: z.string().trim().max(80).optional().or(z.literal("")),
+  package: z
+    .enum(["10min", "20min", "acro", "golan", "gilboa", "media", "test"])
+    .optional(),
+  notes: z.string().trim().max(1000).optional().or(z.literal("")),
+  paymentStatus: z
+    .enum(["pending", "paid", "failed", "cancelled"])
+    .optional(),
+  status: z
+    .enum(["new", "in_progress", "sent", "completed", "cancelled"])
+    .optional(),
 });

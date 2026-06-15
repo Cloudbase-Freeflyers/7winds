@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import LandingPage from "@/components/LandingPage";
+import LandingPageV2 from "@/components/v2/LandingPageV2";
 import { AffiliateProvider } from "@/context/AffiliateContext";
 import { getAffiliateByCode } from "@/lib/affiliates";
 import { BRAND } from "@/lib/constants";
@@ -33,7 +33,7 @@ export default async function AffiliatePage({
         name: affiliate.name,
       }}
     >
-      <LandingPage />
+      <LandingPageV2 />
     </AffiliateProvider>
   );
 }

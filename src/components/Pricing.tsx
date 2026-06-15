@@ -1,6 +1,6 @@
 import AffiliateWhatsAppLink from "@/components/AffiliateWhatsAppLink";
 import PayCheckoutModal from "@/components/PayCheckoutModal";
-import { WHATSAPP_MESSAGES, type ProductPackage } from "@/lib/constants";
+import { DEV_TEST_PACKAGE, WHATSAPP_MESSAGES, type ProductPackage } from "@/lib/constants";
 
 type PayableItem = {
   label: string;
@@ -37,7 +37,28 @@ const PACKAGES = [
 
 const WA_MESSAGE = WHATSAPP_MESSAGES.tandem;
 
-export default function Pricing() {
+export default function Pricing({ includeTestPackage = false }: { includeTestPackage?: boolean }) {
+  const packages = includeTestPackage
+    ? [
+        {
+          emoji: "🧪",
+          title: "בדיקת תשלום",
+          subtitle: "dev בלבד",
+          items: [
+            {
+              label: DEV_TEST_PACKAGE.label,
+              price: DEV_TEST_PACKAGE.price,
+              packageKey: DEV_TEST_PACKAGE.value,
+            },
+          ] satisfies PayableItem[],
+          perks: ["לבדיקת iCount checkout", "₪5 בלבד", "לא מופיע בדף הראשי"],
+          highlight: false,
+          devOnly: true,
+        },
+        ...PACKAGES,
+      ]
+    : PACKAGES;
+
   return (
     <section id="pricing" className="section bg-brand-soft">
       <div className="max-w-5xl mx-auto">
@@ -51,13 +72,15 @@ export default function Pricing() {
         </div>
 
         <div className="mt-8 grid gap-5 md:grid-cols-2">
-          {PACKAGES.map((pkg) => (
+          {packages.map((pkg) => (
             <article
               key={pkg.title}
               className={`relative rounded-3xl overflow-hidden shadow-xl ring-1 ${
                 pkg.highlight
                   ? "bg-hero-radial text-white ring-brand-sky/30"
-                  : "bg-white ring-black/5"
+                  : "devOnly" in pkg && pkg.devOnly
+                    ? "bg-amber-50 ring-amber-300/60 md:col-span-2"
+                    : "bg-white ring-black/5"
               }`}
             >
               {pkg.highlight && (

@@ -1,5 +1,6 @@
 import Image from "next/image";
 import AffiliateWhatsAppLink from "@/components/AffiliateWhatsAppLink";
+import GiftVoucherBanner from "@/components/GiftVoucherBanner";
 import { V2_IMAGES, WHATSAPP_MESSAGES } from "@/lib/constants";
 
 const waMessage = WHATSAPP_MESSAGES.tandem;
@@ -65,6 +66,8 @@ export default function HeroV2() {
               💬 שלחו הודעה בוואטסאפ
             </AffiliateWhatsAppLink>
           </div>
+
+          <GiftVoucherBanner variant="hero" className="mt-4 max-w-md lg:mx-0 mx-auto" />
 
           <p className="mt-4 text-sm font-semibold text-yellow-300 drop-shadow-sm">
             📅 סופי שבוע נתפסים מהר — מספר המקומות מוגבל

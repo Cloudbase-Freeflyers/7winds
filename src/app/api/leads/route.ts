@@ -33,6 +33,7 @@ export async function POST(req: Request) {
       phone: normalizePhone(parsed.data.phone),
       message: parsed.data.message || undefined,
       source: parsed.data.source,
+      status: "new",
       createdAt: new Date(),
       userAgent: req.headers.get("user-agent") || undefined,
       referrer: req.headers.get("referer") || undefined,

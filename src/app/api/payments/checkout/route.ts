@@ -70,6 +70,7 @@ export async function POST(req: Request) {
       bookingAudience: parsed.data.bookingAudience,
       amount,
       paymentStatus: "pending",
+      status: "new",
       createdAt: new Date(),
       ...(affiliate
         ? {

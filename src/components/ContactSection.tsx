@@ -4,7 +4,11 @@ import { CONTACT, WHATSAPP_MESSAGES } from "@/lib/constants";
 
 const WA_MESSAGE = WHATSAPP_MESSAGES.tandem;
 
-export default function ContactSection() {
+export default function ContactSection({
+  includeTestPackage = false,
+}: {
+  includeTestPackage?: boolean;
+}) {
   return (
     <section id="booking" className="section bg-white">
       <div className="max-w-6xl mx-auto grid gap-10 lg:grid-cols-2 items-start">
@@ -45,7 +49,7 @@ export default function ContactSection() {
           </div>
         </div>
 
-        <BookingForm />
+        <BookingForm includeTestPackage={includeTestPackage} />
       </div>
     </section>
   );
