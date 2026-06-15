@@ -53,7 +53,7 @@ export const metadata: Metadata = {
       "טיסת מצנח רחיפה זוגית עם מדריך מקצועי – חוויה שלא תשכחו בחיים.",
     images: [
       {
-        url: BRAND.logo,
+        url: BRAND.favicon,
         alt: "7Winds Paragliding Club",
       },
     ],
@@ -63,12 +63,12 @@ export const metadata: Metadata = {
     title: "טיסת טנדם במצנח רחיפה | 7Winds",
     description:
       "טיסת מצנח רחיפה זוגית עם מדריך מקצועי – חוויה שלא תשכחו בחיים.",
-    images: [BRAND.logo],
+    images: [BRAND.favicon],
   },
   icons: {
-    icon: [{ url: BRAND.logo, type: "image/x-icon" }],
-    shortcut: BRAND.logo,
-    apple: BRAND.logo,
+    icon: [{ url: BRAND.favicon, type: "image/x-icon" }],
+    shortcut: BRAND.favicon,
+    apple: BRAND.favicon,
   },
 };
 

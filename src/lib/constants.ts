@@ -2,7 +2,10 @@ export const BRAND = {
   name: "7Winds Paragliding Club",
   hebrewName: "7Winds — מועדון מצנחי רחיפה",
   url: process.env.NEXT_PUBLIC_SITE_URL || "https://7windsparagliding.com",
-  logo: "/images/favicon_7winds.ico",
+  /** Header, footer, and in-page branding */
+  logo: "/logo.png",
+  /** Browser tab, PWA, and social share preview */
+  favicon: "/images/favicon_7winds.ico",
 } as const;
 
 const rawWhatsApp = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || "972515152637";

@@ -18,11 +18,10 @@ export default function Header() {
           <Image
             src={BRAND.logo}
             alt="7Winds Paragliding Club"
-            width={48}
+            width={140}
             height={48}
             priority
-            className="h-10 w-10"
-            unoptimized
+            className="h-10 w-auto"
           />
         </Link>
         <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-brand-dark">

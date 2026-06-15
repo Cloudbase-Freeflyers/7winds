@@ -10,10 +10,9 @@ export default function Footer() {
           <Image
             src={BRAND.logo}
             alt="7Winds Paragliding Club"
-            width={48}
-            height={48}
-            className="h-12 w-12 bg-white rounded-xl p-2"
-            unoptimized
+            width={150}
+            height={52}
+            className="h-12 w-auto bg-white rounded-xl p-2"
           />
           <p className="mt-4 text-sm leading-relaxed text-white/70">
             7Winds — בית הספר הגדול בישראל למצנחי רחיפה. טיסות חוויה, קורסים,
