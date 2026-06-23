@@ -3,6 +3,7 @@ import { Heebo, Assistant, Rubik } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import AccessibilityWidget from "@/components/AccessibilityWidget";
+import PortalAccessWidget from "@/components/PortalAccessWidget";
 import { GA_ID, PIXEL_ID } from "@/lib/analytics";
 import { BRAND } from "@/lib/constants";
 
@@ -93,6 +94,7 @@ export default function RootLayout({
         </a>
         {children}
         <AccessibilityWidget />
+        <PortalAccessWidget />
 
         {GA_ID && (
           <>
