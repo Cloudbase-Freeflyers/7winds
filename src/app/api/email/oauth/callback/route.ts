@@ -9,12 +9,12 @@ import {
   isGoogleOAuthConfigured,
   verifyOAuthState,
 } from "@/lib/gmail-oauth";
-import { BRAND } from "@/lib/constants";
+import { getConfiguredSiteUrl } from "@/lib/site-url";
 
 export const runtime = "nodejs";
 
 function siteBase() {
-  return (process.env.NEXT_PUBLIC_SITE_URL || BRAND.url).replace(/\/$/, "");
+  return getConfiguredSiteUrl();
 }
 
 function resultUrl(params: Record<string, string>) {

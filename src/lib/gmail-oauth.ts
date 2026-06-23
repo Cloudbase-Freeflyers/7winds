@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { BRAND } from "@/lib/constants";
+import { getConfiguredSiteUrl } from "@/lib/site-url";
 
 export const GMAIL_SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send";
 const EMAIL_SCOPE = "https://www.googleapis.com/auth/userinfo.email";
@@ -16,8 +16,7 @@ export function isGoogleOAuthConfigured(): boolean {
 }
 
 export function getOAuthRedirectUri(): string {
-  const base = (process.env.NEXT_PUBLIC_SITE_URL || BRAND.url).replace(/\/$/, "");
-  return `${base}/api/email/oauth/callback`;
+  return `${getConfiguredSiteUrl()}/api/email/oauth/callback`;
 }
 
 function oauthStateSecret(): string {

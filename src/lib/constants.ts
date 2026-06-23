@@ -1,7 +1,11 @@
+import { normalizeSiteUrl } from "@/lib/site-url";
+
 export const BRAND = {
   name: "7Winds Paragliding Club",
   hebrewName: "7Winds — מועדון מצנחי רחיפה",
-  url: process.env.NEXT_PUBLIC_SITE_URL || "https://7windsparagliding.com",
+  url: normalizeSiteUrl(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://7windsparagliding.com"
+  ),
   /** Header, footer, and in-page branding */
   logo: "/logo.png",
   /** Browser tab, PWA, and social share preview */

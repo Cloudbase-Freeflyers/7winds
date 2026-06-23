@@ -3,6 +3,7 @@ import {
   ADMIN_SESSION_COOKIE,
   verifyAdminSessionToken,
 } from "@/lib/admin-session";
+import { getRequestOriginFromNextRequest } from "@/lib/site-url";
 
 export const config = {
   matcher: ["/admin/:path*", "/api/admin/:path*"],
@@ -44,7 +45,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const login = new URL("/admin/login", req.url);
+  const origin = getRequestOriginFromNextRequest(req);
+  const login = new URL("/admin/login", `${origin}/`);
   if (path !== "/admin/login") {
     login.searchParams.set("next", path);
   }

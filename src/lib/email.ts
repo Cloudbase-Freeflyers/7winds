@@ -1,6 +1,7 @@
 import { BRAND, PACKAGE_LABELS } from "@/lib/constants";
 import { getConnectedEmailSender } from "@/lib/email-sender";
 import { getGoogleOAuthCredentials } from "@/lib/gmail-oauth";
+import { getConfiguredSiteUrl } from "@/lib/site-url";
 import { getApprovedEmailsForTopic } from "@/lib/notification-subscribers";
 import type { LeadDoc } from "@/types/submissions";
 
@@ -44,7 +45,7 @@ export async function getEmailConfigSummary() {
     connectedAt: connected?.connectedAt?.toISOString() || null,
     oauthReady,
     oauthRedirectUri: oauthReady
-      ? `${(process.env.NEXT_PUBLIC_SITE_URL || BRAND.url).replace(/\/$/, "")}/api/email/oauth/callback`
+      ? `${getConfiguredSiteUrl()}/api/email/oauth/callback`
       : null,
     appsScriptUrl,
     systemNotifyEmail: getSystemNotifyEmail(),
