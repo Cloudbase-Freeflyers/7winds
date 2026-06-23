@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+  <head>
+    <base target="_top" />
+    <meta charset="UTF-8" />
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        margin: 0;
+        padding: 24px;
+        background: #f4f7fb;
+        color: #1a1a1a;
+        line-height: 1.5;
+      }
+      .card {
+        max-width: 520px;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 16px;
+        padding: 28px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+      }
+      h1 { margin: 0 0 8px; font-size: 1.5rem; }
+      p.sub { margin: 0 0 20px; color: #555; }
+      label {
+        display: block;
+        font-weight: 600;
+        margin: 16px 0 6px;
+        font-size: 0.9rem;
+      }
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #ccd5e0;
+        border-radius: 8px;
+        font-size: 1rem;
+      }
+      .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+      button {
+        border: none;
+        border-radius: 8px;
+        padding: 10px 16px;
+        font-size: 0.95rem;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .primary { background: #2563eb; color: #fff; }
+      .secondary { background: #e8eef5; color: #1a1a1a; }
+      .ghost { background: transparent; color: #2563eb; text-decoration: underline; padding-left: 0; }
+      .status {
+        margin-top: 20px;
+        padding: 12px 14px;
+        border-radius: 8px;
+        background: #f0f4f8;
+        font-size: 0.9rem;
+      }
+      .msg { margin-top: 16px; padding: 12px; border-radius: 8px; display: none; }
+      .msg.ok { display: block; background: #ecfdf5; color: #065f46; }
+      .msg.err { display: block; background: #fef2f2; color: #991b1b; }
+      ol { padding-right: 20px; color: #444; }
+      code { background: #f0f4f8; padding: 2px 6px; border-radius: 4px; font-size: 0.85rem; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>7Winds — הגדרת אימייל</h1>
+      <p class="sub">
+        אופציה מתקדמת: פרסו עותק זה ב<strong>חשבון Google שלכם</strong> (clasp push).
+        מומלץ: חיבור Gmail ישירות מ־<code>/admin/notifications</code> באתר.
+      </p>
+
+      <div class="status" id="status">טוען…</div>
+
+      <label for="notifyEmail">אימייל לקבלת התראות (ניהול)</label>
+      <input id="notifyEmail" type="email" placeholder="you@example.com" />
+
+      <label for="apiSecret">מפתח API (העתיקו ל־.env.local באתר)</label>
+      <input id="apiSecret" type="text" placeholder="לפחות 16 תווים" autocomplete="off" />
+      <button type="button" class="ghost" onclick="generateSecret()">יצירת מפתח אקראי</button>
+
+      <div class="row">
+        <button type="button" class="primary" onclick="saveSetup()">1. שמירה</button>
+        <button type="button" class="secondary" onclick="authorize()">2. אישור Gmail</button>
+        <button type="button" class="secondary" onclick="testEmail()">3. שליחת בדיקה</button>
+      </div>
+
+      <div id="message" class="msg"></div>
+
+      <h2 style="margin-top: 28px; font-size: 1.1rem">פריסה באתר</h2>
+      <ol>
+        <li>ב־Apps Script: <strong>Deploy → New deployment → Web app</strong></li>
+        <li>Execute as: <strong>Me</strong> · Who has access: <strong>Anyone</strong></li>
+        <li>העתיקו את כתובת ה-Web App ל־<code>.env.local</code>:</li>
+      </ol>
+      <pre style="background:#f0f4f8;padding:12px;border-radius:8px;overflow:auto;font-size:0.85rem">APPS_SCRIPT_WEBAPP_URL=https://script.google.com/macros/s/.../exec
+APPS_SCRIPT_SECRET=your-secret-from-above</pre>
+    </div>
+
+    <script>
+      function showMsg(text, ok) {
+        var el = document.getElementById("message");
+        el.textContent = text;
+        el.className = "msg " + (ok ? "ok" : "err");
+      }
+
+      function generateSecret() {
+        var arr = new Uint8Array(24);
+        crypto.getRandomValues(arr);
+        document.getElementById("apiSecret").value = Array.from(arr, function (b) {
+          return ("0" + b.toString(16)).slice(-2);
+        }).join("");
+      }
+
+      function refreshStatus() {
+        google.script.run
+          .withSuccessHandler(function (s) {
+            var lines = [
+              "חשבון מחובר: " + (s.authorizedEmail || "—"),
+              "התראות ל: " + (s.notifyEmail || "לא הוגדר"),
+              "מוכן: " + (s.configured ? "כן" : "לא"),
+            ];
+            document.getElementById("status").textContent = lines.join(" · ");
+            if (s.notifyEmail) {
+              document.getElementById("notifyEmail").value = s.notifyEmail;
+            }
+          })
+          .withFailureHandler(function (e) {
+            document.getElementById("status").textContent = "שגיאה: " + e.message;
+          })
+          .getStatus();
+      }
+
+      function saveSetup() {
+        var secret = document.getElementById("apiSecret").value;
+        var email = document.getElementById("notifyEmail").value;
+        google.script.run
+          .withSuccessHandler(function () {
+            showMsg("נשמר בהצלחה.", true);
+            refreshStatus();
+          })
+          .withFailureHandler(function (e) {
+            showMsg(e.message, false);
+          })
+          .saveSetup(secret, email);
+      }
+
+      function authorize() {
+        showMsg("ממתין לאישור Google…", true);
+        google.script.run
+          .withSuccessHandler(function (r) {
+            showMsg("Gmail מאושר עבור " + r.email, true);
+            refreshStatus();
+          })
+          .withFailureHandler(function (e) {
+            showMsg(e.message, false);
+          })
+          .authorizeGmail();
+      }
+
+      function testEmail() {
+        google.script.run
+          .withSuccessHandler(function (r) {
+            showMsg("נשלח מייל בדיקה ל־" + r.to, true);
+          })
+          .withFailureHandler(function (e) {
+            showMsg(e.message, false);
+          })
+          .sendTestEmail();
+      }
+
+      refreshStatus();
+    </script>
+  </body>
+</html>

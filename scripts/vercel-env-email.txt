@@ -1,0 +1,13 @@
+# Production env vars to add in Vercel → Project → Settings → Environment Variables
+# Apply to: Production (and Preview if you test on preview URLs)
+
+GOOGLE_CLIENT_ID=61202666661-a9hbq7k2ogon88deijvnjlcm5s60gof8.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=<paste from Google Cloud — single GOCSPX- prefix>
+NEXT_PUBLIC_SITE_URL=https://lp.7windsparagliding.co.il
+NOTIFY_EMAIL=<optional owner inbox>
+
+# Already on prod (verify these exist):
+# MONGODB_URI
+# MONGODB_DB=7winds
+# ADMIN_PASSWORD
+# AFFILIATE_SESSION_SECRET

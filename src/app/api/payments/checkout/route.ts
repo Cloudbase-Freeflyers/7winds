@@ -2,10 +2,10 @@ import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { resolveAffiliate } from "@/lib/affiliates";
 import {
-  buildCheckoutRedirectUrl,
-  getPackageDescription,
-  getPackagePrice,
-} from "@/lib/icount";
+  calculateBookingPrice,
+  formatBookingDescription,
+} from "@/lib/booking-pricing";
+import { buildCheckoutRedirectUrl } from "@/lib/icount";
 import { getDb } from "@/lib/mongodb";
 import { checkoutSchema, normalizePhone } from "@/lib/validation";
 import type { VoucherDoc } from "@/types/submissions";
@@ -41,8 +41,15 @@ export async function POST(req: Request) {
     const affiliateCode = parsed.data.affiliateCode || undefined;
     const affiliate = await resolveAffiliate(affiliateCode);
     const orderId = randomUUID();
-    const amount = getPackagePrice(parsed.data.package);
-    const description = getPackageDescription(parsed.data.package);
+    const flightCount = parsed.data.flightCount;
+    const pricing = calculateBookingPrice(parsed.data.package, flightCount);
+    const amount = pricing.total;
+    const description = formatBookingDescription(
+      parsed.data.package,
+      pricing.flightCount,
+      pricing.total
+    );
+    const bookingAudience = pricing.bookingAudience;
 
     const redirectUrl = buildCheckoutRedirectUrl({
       orderId,
@@ -53,7 +60,8 @@ export async function POST(req: Request) {
       buyerEmail: parsed.data.buyerEmail,
       affiliateCode: affiliate?.code,
       orderType: parsed.data.type,
-      bookingAudience: parsed.data.bookingAudience,
+      bookingAudience,
+      flightCount: pricing.flightCount,
     });
 
     const db = await getDb();
@@ -67,7 +75,11 @@ export async function POST(req: Request) {
       package: parsed.data.package,
       notes: parsed.data.notes || undefined,
       orderType: parsed.data.type,
-      bookingAudience: parsed.data.bookingAudience,
+      bookingAudience,
+      flightCount: pricing.flightCount,
+      videoDiscount: pricing.videoDiscount || undefined,
+      percentDiscount: pricing.percentDiscount || undefined,
+      percentRate: pricing.percentRate || undefined,
       amount,
       paymentStatus: "pending",
       status: "new",

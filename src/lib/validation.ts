@@ -50,6 +50,7 @@ export const checkoutSchema = z.object({
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
   affiliateCode: z.string().trim().max(40).optional().or(z.literal("")),
   bookingAudience: z.enum(["solo", "group"]).optional(),
+  flightCount: z.coerce.number().int().min(1).max(20).default(1),
 });
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
@@ -166,4 +167,13 @@ export const adminVoucherUpdateSchema = z.object({
   status: z
     .enum(["new", "in_progress", "sent", "completed", "cancelled"])
     .optional(),
+});
+
+export const notificationSubscribeSchema = z.object({
+  email: emailSchema,
+  name: z.string().trim().min(2, "נא להזין שם").max(80).optional().or(z.literal("")),
+});
+
+export const notificationSubscriberUpdateSchema = z.object({
+  status: z.enum(["pending", "approved", "rejected"]),
 });

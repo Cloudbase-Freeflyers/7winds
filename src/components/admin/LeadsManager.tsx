@@ -41,6 +41,7 @@ type VoucherRow = {
   affiliateCode?: string;
   orderType?: string;
   amount?: number;
+  flightCount?: number;
   createdAt: string;
 };
 
@@ -280,8 +281,20 @@ export default function LeadsManager() {
                   <Td>{v.buyerName}</Td>
                   <Td dir="ltr">{v.buyerPhone}</Td>
                   <Td>
-                    {PACKAGE_LABELS[v.package as keyof typeof PACKAGE_LABELS] ||
-                      v.package}
+                    <div>
+                      {v.flightCount && v.flightCount > 1
+                        ? `${v.flightCount}× `
+                        : ""}
+                      {PACKAGE_LABELS[v.package as keyof typeof PACKAGE_LABELS]?.replace(
+                        /\s*—\s*₪[\d,]+$/,
+                        ""
+                      ) || v.package}
+                    </div>
+                    {v.amount != null && (
+                      <div className="text-xs text-brand-dark mt-0.5">
+                        ₪{v.amount.toLocaleString("he-IL")}
+                      </div>
+                    )}
                   </Td>
                   <Td>
                     <StatusSelect

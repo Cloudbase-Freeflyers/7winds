@@ -35,6 +35,7 @@ export function buildCheckoutRedirectUrl(params: {
   affiliateCode?: string;
   orderType: "voucher" | "direct";
   bookingAudience?: "solo" | "group";
+  flightCount?: number;
 }): string {
   const payPageUrl =
     params.bookingAudience === "group" && process.env.ICOUNT_GROUP_PAYPAGE_URL?.trim()
@@ -71,6 +72,9 @@ export function buildCheckoutRedirectUrl(params: {
   }
   if (params.bookingAudience) {
     url.searchParams.set("m__bookingAudience", params.bookingAudience);
+  }
+  if (params.flightCount != null && params.flightCount > 1) {
+    url.searchParams.set("m__flightCount", String(params.flightCount));
   }
 
   return url.toString();

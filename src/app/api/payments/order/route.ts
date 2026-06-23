@@ -33,6 +33,10 @@ export async function GET(req: Request) {
         recipientName: order.recipientName ?? null,
         occasion: order.occasion ?? null,
         bookingAudience: order.bookingAudience ?? null,
+        flightCount: order.flightCount ?? null,
+        videoDiscount: order.videoDiscount ?? null,
+        percentDiscount: order.percentDiscount ?? null,
+        percentRate: order.percentRate ?? null,
       },
     });
   } catch (err) {

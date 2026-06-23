@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/mongodb";
 import { resolveAffiliate, recordAffiliateEvent } from "@/lib/affiliates";
+import { notifyAsync, notifyNewLead } from "@/lib/email";
+import { getDb } from "@/lib/mongodb";
 import { leadSchema, normalizePhone } from "@/lib/validation";
 import type { LeadDoc } from "@/types/submissions";
 
@@ -51,6 +52,8 @@ export async function POST(req: Request) {
         leadId: result.insertedId.toString(),
       });
     }
+
+    notifyAsync(() => notifyNewLead(doc));
 
     return NextResponse.json({ ok: true, id: result.insertedId.toString() });
   } catch (err) {

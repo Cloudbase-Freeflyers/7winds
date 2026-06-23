@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/mongodb";
 import { resolveAffiliate, recordAffiliateEvent } from "@/lib/affiliates";
+import { getDb } from "@/lib/mongodb";
 import { voucherSchema, normalizePhone } from "@/lib/validation";
 import type { VoucherDoc } from "@/types/submissions";
 

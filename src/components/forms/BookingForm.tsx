@@ -1,8 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { track } from "@/lib/analytics";
 import GiftVoucherBanner from "@/components/GiftVoucherBanner";
+import {
+  calculateBookingPrice,
+  formatNis,
+  getBookingAudience,
+  MAX_FLIGHT_COUNT,
+} from "@/lib/booking-pricing";
 import {
   DEV_TEST_PACKAGE,
   VOUCHER_PACKAGES,
@@ -11,7 +17,6 @@ import {
 import { useAffiliateCode } from "@/context/AffiliateContext";
 
 type State = "idle" | "submitting" | "error";
-type BookingAudience = "solo" | "group";
 
 export default function BookingForm({
   includeTestPackage = false,
@@ -20,8 +25,16 @@ export default function BookingForm({
 }) {
   const [state, setState] = useState<State>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [audience, setAudience] = useState<BookingAudience>("solo");
+  const [flightCount, setFlightCount] = useState(1);
+  const [selectedPackage, setSelectedPackage] = useState<ProductPackage | "">("");
   const affiliateCode = useAffiliateCode();
+
+  const audience = getBookingAudience(flightCount);
+
+  const pricing = useMemo(() => {
+    if (!selectedPackage) return null;
+    return calculateBookingPrice(selectedPackage, flightCount);
+  }, [selectedPackage, flightCount]);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -29,13 +42,16 @@ export default function BookingForm({
     setError(null);
 
     const fd = new FormData(e.currentTarget);
+    const pkg = String(fd.get("package") || "") as ProductPackage;
+    const count = Number(fd.get("flightCount") || flightCount);
     const payload = {
       type: "direct" as const,
-      package: String(fd.get("package") || "") as ProductPackage,
+      package: pkg,
+      flightCount: count,
       buyerName: String(fd.get("buyerName") || "").trim(),
       buyerPhone: String(fd.get("buyerPhone") || "").trim(),
       buyerEmail: String(fd.get("buyerEmail") || "").trim(),
-      bookingAudience: audience,
+      bookingAudience: getBookingAudience(count),
       ...(affiliateCode ? { affiliateCode } : {}),
     };
 
@@ -63,35 +79,64 @@ export default function BookingForm({
     >
       <GiftVoucherBanner className="mb-5" />
 
-      {/* Solo / Group toggle */}
-      <fieldset className="mb-5">
-        <legend className="block text-sm font-bold text-brand-black mb-2">
-          למי הטיסה?
-        </legend>
-        <div className="grid grid-cols-2 gap-3">
-          <AudienceOption
-            id="audience-solo"
-            label="בשבילי"
-            sub="טיסה אישית"
-            emoji="🪂"
-            checked={audience === "solo"}
-            onChange={() => setAudience("solo")}
+      <div className="mb-5">
+        <label
+          htmlFor="flightCount"
+          className="block text-sm font-bold text-brand-black mb-1.5"
+        >
+          כמה טיסות?
+        </label>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            aria-label="הפחת כמות"
+            disabled={flightCount <= 1}
+            onClick={() => setFlightCount((n) => Math.max(1, n - 1))}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-black/10 bg-white text-lg font-bold text-brand-black transition hover:border-brand-sky disabled:opacity-40"
+          >
+            −
+          </button>
+          <input
+            id="flightCount"
+            name="flightCount"
+            type="number"
+            min={1}
+            max={MAX_FLIGHT_COUNT}
+            value={flightCount}
+            onChange={(e) => {
+              const n = parseInt(e.target.value, 10);
+              if (!Number.isNaN(n)) {
+                setFlightCount(Math.min(MAX_FLIGHT_COUNT, Math.max(1, n)));
+              }
+            }}
+            className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-center text-brand-black focus:border-brand-sky focus:outline-none focus:ring-4 focus:ring-brand-sky/20 transition"
           />
-          <AudienceOption
-            id="audience-group"
-            label="קבוצה"
-            sub="מספר משתתפים"
-            emoji="👥"
-            checked={audience === "group"}
-            onChange={() => setAudience("group")}
-          />
+          <button
+            type="button"
+            aria-label="הוסף כמות"
+            disabled={flightCount >= MAX_FLIGHT_COUNT}
+            onClick={() =>
+              setFlightCount((n) => Math.min(MAX_FLIGHT_COUNT, n + 1))
+            }
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-black/10 bg-white text-lg font-bold text-brand-black transition hover:border-brand-sky disabled:opacity-40"
+          >
+            +
+          </button>
         </div>
-        {audience === "group" && (
-          <p className="mt-2 text-xs text-brand-dark">
-            תשלום קבוצתי — ניצור איתכם קשר לתיאום מספר המשתתפים לאחר הרכישה.
-          </p>
-        )}
-      </fieldset>
+        <p className="mt-2 text-xs text-brand-dark">
+          {audience === "solo" ? (
+            <>
+              <span className="font-bold text-brand-sky">טיסה אישית</span> — 1–2
+              טיסות ללא הנחה
+            </>
+          ) : (
+            <>
+              <span className="font-bold text-brand-sky">הזמנה קבוצתית</span> —
+              מ-3 טיסות: צילום חינם לכל טיסה + הנחות נוספות
+            </>
+          )}
+        </p>
+      </div>
 
       <div className="grid gap-4">
         <div>
@@ -101,7 +146,10 @@ export default function BookingForm({
           <select
             name="package"
             required
-            defaultValue=""
+            value={selectedPackage}
+            onChange={(e) =>
+              setSelectedPackage(e.target.value as ProductPackage | "")
+            }
             className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-brand-black focus:border-brand-sky focus:outline-none focus:ring-4 focus:ring-brand-sky/20 transition"
           >
             <option value="" disabled>
@@ -117,6 +165,10 @@ export default function BookingForm({
             ))}
           </select>
         </div>
+
+        {pricing && (flightCount >= 2 || pricing.videoDiscount > 0 || pricing.percentDiscount > 0) && (
+          <PriceSummary pricing={pricing} />
+        )}
 
         <Field
           label="שם מלא"
@@ -169,46 +221,39 @@ export default function BookingForm({
   );
 }
 
-function AudienceOption({
-  id,
-  label,
-  sub,
-  emoji,
-  checked,
-  onChange,
+function PriceSummary({
+  pricing,
 }: {
-  id: string;
-  label: string;
-  sub: string;
-  emoji: string;
-  checked: boolean;
-  onChange: () => void;
+  pricing: ReturnType<typeof calculateBookingPrice>;
 }) {
   return (
-    <label
-      htmlFor={id}
-      className={`flex cursor-pointer items-center gap-3 rounded-2xl border-2 px-4 py-3 transition ${
-        checked
-          ? "border-brand-sky bg-brand-sky/10 ring-2 ring-brand-sky/20"
-          : "border-black/10 bg-white hover:border-brand-sky/40"
-      }`}
-    >
-      <input
-        id={id}
-        type="radio"
-        name="audience"
-        checked={checked}
-        onChange={onChange}
-        className="sr-only"
-      />
-      <span className="text-2xl" aria-hidden>
-        {emoji}
-      </span>
-      <span>
-        <span className="block font-bold text-brand-black">{label}</span>
-        <span className="block text-xs text-brand-dark">{sub}</span>
-      </span>
-    </label>
+    <div className="rounded-2xl border border-brand-sky/20 bg-brand-sky/5 px-4 py-3 text-sm">
+      <p className="font-bold text-brand-black mb-2">סיכום מחיר</p>
+      <dl className="space-y-1 text-brand-dark">
+        <div className="flex justify-between">
+          <dt>
+            מחיר בסיס ({pricing.flightCount}× {formatNis(pricing.unitPrice)})
+          </dt>
+          <dd>{formatNis(pricing.subtotal)}</dd>
+        </div>
+        {pricing.videoDiscount > 0 && (
+          <div className="flex justify-between text-green-700">
+            <dt>צילום חינם לכל טיסה</dt>
+            <dd>−{formatNis(pricing.videoDiscount)}</dd>
+          </div>
+        )}
+        {pricing.percentDiscount > 0 && (
+          <div className="flex justify-between text-green-700">
+            <dt>הנחה {Math.round(pricing.percentRate * 100)}%</dt>
+            <dd>−{formatNis(pricing.percentDiscount)}</dd>
+          </div>
+        )}
+        <div className="flex justify-between border-t border-brand-sky/20 pt-2 font-bold text-brand-black">
+          <dt>סה״כ לתשלום</dt>
+          <dd>{formatNis(pricing.total)}</dd>
+        </div>
+      </dl>
+    </div>
   );
 }
 

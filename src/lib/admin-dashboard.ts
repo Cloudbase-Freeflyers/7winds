@@ -120,6 +120,13 @@ export const SYSTEM_PAGES: MarketingPageLink[] = [
     type: "main",
   },
   {
+    id: "admin-notifications",
+    label: "התראות אימייל",
+    path: "/admin/notifications",
+    description: "Apps Script, אישור מנויים, לידים בלבד",
+    type: "main",
+  },
+  {
     id: "affiliate-portal-login",
     label: "כניסת שותפים",
     path: "/affiliate/login",

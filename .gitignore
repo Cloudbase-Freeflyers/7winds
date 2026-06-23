@@ -5,6 +5,7 @@ build/
 .env
 .env.local
 .env.*.local
+apps-script/.clasp.json
 .DS_Store
 *.tsbuildinfo
 next-env.d.ts

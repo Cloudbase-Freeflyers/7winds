@@ -1,9 +1,10 @@
-export type AdminTab = "dashboard" | "leads" | "affiliates";
+export type AdminTab = "dashboard" | "leads" | "affiliates" | "notifications";
 
 const TABS: { id: AdminTab; href: string; label: string; icon: string }[] = [
   { id: "dashboard", href: "/admin", label: "סקירה", icon: "📊" },
   { id: "leads", href: "/admin/leads", label: "לידים ושוברים", icon: "📥" },
   { id: "affiliates", href: "/admin/affiliates", label: "שותפים", icon: "🤝" },
+  { id: "notifications", href: "/admin/notifications", label: "התראות", icon: "📧" },
 ];
 
 export default function AdminNav({ active }: { active: AdminTab }) {

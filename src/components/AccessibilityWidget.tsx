@@ -89,10 +89,22 @@ export default function AccessibilityWidget() {
 
   return (
     <div
-      className="fixed bottom-4 start-4 z-[9999] flex flex-col items-start gap-2"
+      className="fixed top-20 start-4 z-[9999] flex flex-col items-start gap-2"
       dir="rtl"
       lang="he"
     >
+      <button
+        ref={toggleRef}
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls={panelId}
+        aria-label={open ? "סגירת תפריט נגישות" : "פתיחת תפריט נגישות"}
+        className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-sky text-white text-2xl shadow-xl hover:brightness-110 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-sky/40"
+      >
+        ♿
+      </button>
+
       {open && (
         <div
           id={panelId}
@@ -184,18 +196,6 @@ export default function AccessibilityWidget() {
           </div>
         </div>
       )}
-
-      <button
-        ref={toggleRef}
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
-        aria-controls={panelId}
-        aria-label={open ? "סגירת תפריט נגישות" : "פתיחת תפריט נגישות"}
-        className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-sky text-white text-2xl shadow-xl hover:brightness-110 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-sky/40"
-      >
-        ♿
-      </button>
     </div>
   );
 }

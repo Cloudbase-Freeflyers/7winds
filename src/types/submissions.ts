@@ -43,6 +43,10 @@ export interface VoucherDoc {
   notes?: string;
   orderType?: "voucher" | "direct";
   bookingAudience?: "solo" | "group";
+  flightCount?: number;
+  videoDiscount?: number;
+  percentDiscount?: number;
+  percentRate?: number;
   amount?: number;
   paymentStatus?: PaymentStatus;
   status?: VoucherAdminStatus;

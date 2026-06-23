@@ -2,10 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import AffiliateCommissionCalculator from "@/components/affiliate/AffiliateCommissionCalculator";
 import { BRAND } from "@/lib/constants";
 import {
+  AFFILIATE_PRICING_POLICY,
   AFFILIATE_SCENARIOS,
   CHART_DATA,
+  GROUP_DEAL_COMMISSION_EXAMPLE,
   GROUP_RATE,
   PACKAGE_COMMISSION_EXAMPLES,
   VOLUME_RATE_TIERS,
@@ -62,6 +65,12 @@ export default function AffiliateCommissionProposal() {
             <Link href="/affiliate/login" className="btn-primary btn-md">
               כניסת שותפים
             </Link>
+            <a href="#calculator" className="btn-outline btn-md">
+              מחשבון עמלה
+            </a>
+            <a href="#policy" className="btn-outline btn-md">
+              מדיניות מחיר
+            </a>
             <a href="#scenarios" className="btn-outline btn-md">
               דוגמאות רווח
             </a>
@@ -80,7 +89,7 @@ export default function AffiliateCommissionProposal() {
       <Section
         id="structure"
         title="מבנה עמלה לפי מחזור חודשי"
-        subtitle="השיעור נקבע לפי סך המכירות ששולמו והופנו על ידך באותו חודש — ומתאפס בכל תחילת חודש"
+        subtitle="השיעור נקבע לפי סך המכירות ששולמו בפועל והופנו על ידך באותו חודש — ומתאפס בכל תחילת חודש"
       >
         <div className="overflow-x-auto rounded-2xl ring-1 ring-black/5 bg-white shadow-sm">
           <table className="w-full text-sm">
@@ -118,14 +127,14 @@ export default function AffiliateCommissionProposal() {
       <Section
         id="dashboard"
         title="מחירון מוצרים — בסיס לחישוב"
-        subtitle="ערך כל הזמנה נספר לעבר המחזור החודשי. העמלה בפועל לפי השיעור החודשי שלך."
+        subtitle="מחירי מחירון ליחידה — לצורך הערכה בלבד. בפועל נספר הסכום ששולם לאחר הנחות."
       >
         <div className="overflow-x-auto rounded-2xl ring-1 ring-black/5 bg-white shadow-sm">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-brand-soft border-b border-black/5">
                 <Th>מוצר / חבילה</Th>
-                <Th>ערך הזמנה</Th>
+                <Th>מחיר מחירון</Th>
                 <Th>עמלה ב-10%</Th>
                 <Th>עמלה ב-12%</Th>
                 <Th>עמלה ב-15%</Th>
@@ -148,10 +157,81 @@ export default function AffiliateCommissionProposal() {
         </div>
       </Section>
 
+      {/* Pricing & commission basis policy */}
+      <Section
+        id="policy"
+        title={AFFILIATE_PRICING_POLICY.title}
+        subtitle={AFFILIATE_PRICING_POLICY.intro}
+      >
+        <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-6 space-y-5">
+          <ul className="space-y-2 text-sm text-brand-dark">
+            {AFFILIATE_PRICING_POLICY.bullets.map((item) => (
+              <li key={item} className="flex gap-2">
+                <span className="text-brand-sky shrink-0 font-bold">•</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="rounded-xl border border-brand-yellow/40 bg-brand-yellow/10 p-5">
+            <p className="font-display font-extrabold text-brand-black mb-3">
+              דוגמה — הזמנה קבוצתית של {GROUP_DEAL_COMMISSION_EXAMPLE.flightCount} טיסות
+            </p>
+            <p className="text-sm text-brand-dark mb-4">
+              {GROUP_DEAL_COMMISSION_EXAMPLE.flightCount}×{" "}
+              {GROUP_DEAL_COMMISSION_EXAMPLE.packageLabel}: מחיר מחירון{" "}
+              {formatIls(GROUP_DEAL_COMMISSION_EXAMPLE.listTotal)}, אך לאחר הנחת
+              קבוצה (צילום חינם לכל טיסה) הלקוח משלם{" "}
+              <strong>{formatIls(GROUP_DEAL_COMMISSION_EXAMPLE.paidTotal)}</strong>.
+              העמלה מחושבת על הסכום ששולם בפועל.
+            </p>
+            <div className="overflow-x-auto rounded-xl ring-1 ring-black/5 bg-white">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-brand-soft border-b border-black/5">
+                    <Th>בסיס חישוב</Th>
+                    <Th>סכום</Th>
+                    <Th>עמלה ב-10%</Th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-black/5">
+                    <Td>מחיר מחירון (ללא הנחה)</Td>
+                    <Td>{formatIls(GROUP_DEAL_COMMISSION_EXAMPLE.listTotal)}</Td>
+                    <Td className="text-brand-dark/50 line-through">
+                      {formatIls(GROUP_DEAL_COMMISSION_EXAMPLE.commissionAtList10)}{" "}
+                      — לא רלוונטי
+                    </Td>
+                  </tr>
+                  <tr>
+                    <Td className="font-bold">סכום ששולם בפועל</Td>
+                    <Td className="font-bold text-brand-green">
+                      {formatIls(GROUP_DEAL_COMMISSION_EXAMPLE.paidTotal)}
+                    </Td>
+                    <Td className="font-bold text-brand-green">
+                      {formatIls(GROUP_DEAL_COMMISSION_EXAMPLE.commissionAt10)}
+                    </Td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* Commission calculator */}
+      <Section
+        id="calculator"
+        title="מחשבון עמלה"
+        subtitle="הוסיפו הזמנות עם הנחות קבוצתיות — ראו כמה תרוויחו לפי מחזור חודשי"
+      >
+        <AffiliateCommissionCalculator />
+      </Section>
+
       {/* Group rate */}
       <Section
         title="מחיר מיוחד לקבוצות"
-        subtitle="עסקאות קבוצתיות מתואמות אישית מול 7Winds"
+        subtitle="הזמנות קבוצתיות באתר (מ-3 טיסות) — הנחות אוטומטיות. קבוצות גדולות (50+) — תיאום אישי."
       >
         <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-6 flex flex-wrap items-center justify-between gap-4">
           <div>
