@@ -40,6 +40,8 @@ export default function NotificationManager() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
+  const [newEmail, setNewEmail] = useState("");
+  const [newName, setNewName] = useState("");
 
   useEffect(() => {
     if (searchParams.get("connected") === "1") {
@@ -125,6 +127,31 @@ export default function NotificationManager() {
       } else {
         await load();
       }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "שגיאה");
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  async function addEmail(e: React.FormEvent) {
+    e.preventDefault();
+    const email = newEmail.trim();
+    if (!email) return;
+    setSaving("add");
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name: newName.trim() || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "הוספה נכשלה");
+      setNewEmail("");
+      setNewName("");
+      setNotice(`${data.row?.email || email} נוסף ואושר.`);
+      await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : "שגיאה");
     } finally {
@@ -277,6 +304,46 @@ export default function NotificationManager() {
             ))}
           </div>
         </div>
+
+        <form
+          onSubmit={addEmail}
+          className="mt-4 flex flex-wrap items-end gap-2 rounded-xl bg-brand-soft p-3"
+        >
+          <div className="flex-1 min-w-[12rem]">
+            <label htmlFor="add-email" className="block text-xs font-bold mb-1">
+              הוספת אימייל (מאושר מיד)
+            </label>
+            <input
+              id="add-email"
+              type="email"
+              required
+              dir="ltr"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              placeholder="name@example.com"
+              className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+            />
+          </div>
+          <div className="min-w-[8rem]">
+            <label htmlFor="add-name" className="block text-xs font-bold mb-1">
+              שם (לא חובה)
+            </label>
+            <input
+              id="add-name"
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={saving === "add"}
+            className="btn-primary btn-sm"
+          >
+            {saving === "add" ? "מוסיף…" : "הוסף"}
+          </button>
+        </form>
 
         {error && (
           <div className="mt-4 rounded-xl bg-red-50 border border-red-200 p-3 text-red-800 text-sm">

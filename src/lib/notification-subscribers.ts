@@ -237,6 +237,49 @@ export async function requestNotificationSubscription(params: {
   };
 }
 
+/**
+ * Admin-side: add (or re-approve) an email directly as an approved subscriber.
+ * Unlike requestNotificationSubscription this skips the pending step, so the
+ * owner can put their own address on the list without the public subscribe flow.
+ */
+export async function addApprovedSubscriber(params: {
+  email: string;
+  name?: string;
+  preferences?: Partial<NotificationPreferences>;
+}) {
+  await ensureIndexes();
+  const db = await getDb();
+  const coll = db.collection<NotificationSubscriberDoc>("notification_subscribers");
+  const email = params.email.trim().toLowerCase();
+  const requested = normalizePreferences(
+    mergePreferences(defaultNotificationPreferences(), params.preferences ?? {})
+  );
+  const now = new Date();
+
+  const existing = await coll.findOne({ email });
+  const preferences = existing
+    ? mergePreferences(normalizePreferences(existing.preferences), requested)
+    : requested;
+  const name = params.name?.trim() || existing?.name;
+
+  const set: Partial<NotificationSubscriberDoc> = {
+    status: "approved",
+    preferences,
+    approvedAt: existing?.approvedAt ?? now,
+    updatedAt: now,
+  };
+  if (name) set.name = name;
+
+  await coll.updateOne(
+    { email },
+    { $set: set, $setOnInsert: { email, createdAt: now } },
+    { upsert: true }
+  );
+
+  const doc = await coll.findOne({ email });
+  return doc ? docWithDefaults(doc) : null;
+}
+
 export async function updateNotificationSubscriber(
   id: string,
   updates: {
