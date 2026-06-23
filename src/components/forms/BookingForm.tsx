@@ -132,7 +132,7 @@ export default function BookingForm({
           ) : (
             <>
               <span className="font-bold text-brand-sky">הזמנה קבוצתית</span> —
-              מ-3 טיסות: צילום חינם לכל טיסה + הנחות נוספות
+              מ-3 טיסות: צילום חינם בכל 3 טיסות + הנחות נוספות
             </>
           )}
         </p>
@@ -238,7 +238,11 @@ function PriceSummary({
         </div>
         {pricing.videoDiscount > 0 && (
           <div className="flex justify-between text-green-700">
-            <dt>צילום חינם לכל טיסה</dt>
+            <dt>
+              {pricing.freeVideoCount === 1
+                ? "צילום חינם (כל 3 טיסות)"
+                : `${pricing.freeVideoCount}× צילום חינם (כל 3 טיסות)`}
+            </dt>
             <dd>−{formatNis(pricing.videoDiscount)}</dd>
           </div>
         )}

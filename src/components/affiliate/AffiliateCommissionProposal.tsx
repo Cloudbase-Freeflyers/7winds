@@ -181,7 +181,7 @@ export default function AffiliateCommissionProposal() {
               {GROUP_DEAL_COMMISSION_EXAMPLE.flightCount}×{" "}
               {GROUP_DEAL_COMMISSION_EXAMPLE.packageLabel}: מחיר מחירון{" "}
               {formatIls(GROUP_DEAL_COMMISSION_EXAMPLE.listTotal)}, אך לאחר הנחת
-              קבוצה (צילום חינם לכל טיסה) הלקוח משלם{" "}
+              קבוצה (צילום חינם בכל 3 טיסות) הלקוח משלם{" "}
               <strong>{formatIls(GROUP_DEAL_COMMISSION_EXAMPLE.paidTotal)}</strong>.
               העמלה מחושבת על הסכום ששולם בפועל.
             </p>

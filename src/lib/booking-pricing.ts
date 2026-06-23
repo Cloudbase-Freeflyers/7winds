@@ -7,6 +7,12 @@ import {
 export type BookingAudience = "solo" | "group";
 
 export const MAX_FLIGHT_COUNT = 20;
+export const FREE_VIDEO_EVERY_N_FLIGHTS = 3;
+
+export function getFreeVideoCount(flightCount: number): number {
+  const count = Math.max(0, Math.floor(flightCount));
+  return Math.floor(count / FREE_VIDEO_EVERY_N_FLIGHTS);
+}
 
 export function getBookingAudience(flightCount: number): BookingAudience {
   return flightCount >= 3 ? "group" : "solo";
@@ -24,6 +30,7 @@ export interface BookingPriceBreakdown {
   flightCount: number;
   unitPrice: number;
   subtotal: number;
+  freeVideoCount: number;
   videoDiscount: number;
   percentRate: number;
   percentDiscount: number;
@@ -38,8 +45,8 @@ export function calculateBookingPrice(
   const count = Math.max(1, Math.min(MAX_FLIGHT_COUNT, Math.floor(flightCount)));
   const unitPrice = PACKAGE_PRICES[pkg];
   const subtotal = count * unitPrice;
-  const videoDiscount =
-    count >= 3 ? count * PACKAGE_PRICES.media : 0;
+  const freeVideoCount = getFreeVideoCount(count);
+  const videoDiscount = freeVideoCount * PACKAGE_PRICES.media;
   const percentRate = getGroupPercentRate(count);
   const percentDiscount = Math.round(subtotal * percentRate);
   const total = Math.max(0, subtotal - videoDiscount - percentDiscount);
@@ -48,6 +55,7 @@ export function calculateBookingPrice(
     flightCount: count,
     unitPrice,
     subtotal,
+    freeVideoCount,
     videoDiscount,
     percentRate,
     percentDiscount,
@@ -64,8 +72,13 @@ export function formatBookingDescription(
   const label = PACKAGE_LABELS[pkg].replace(/\s*—\s*₪[\d,]+$/, "");
   const parts = [`${flightCount}× ${label}`];
 
-  if (flightCount >= 3) {
-    parts.push("צילום חינם לכל טיסה");
+  const freeVideos = getFreeVideoCount(flightCount);
+  if (freeVideos > 0) {
+    parts.push(
+      freeVideos === 1
+        ? "צילום חינם (כל 3 טיסות)"
+        : `${freeVideos}× צילום חינם (כל 3 טיסות)`
+    );
   }
 
   const rate = getGroupPercentRate(flightCount);
