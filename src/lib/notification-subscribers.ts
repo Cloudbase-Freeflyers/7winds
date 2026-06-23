@@ -17,11 +17,27 @@ function ensureIndexes() {
       const db = await getDb();
       const coll = db.collection<NotificationSubscriberDoc>("notification_subscribers");
       await mergeDuplicateSubscribers(coll);
+      await backfillMissingPreferences(coll);
       await coll.createIndex({ email: 1 }, { unique: true });
       await coll.createIndex({ status: 1, createdAt: -1 });
     })();
   }
   return indexesReady;
+}
+
+/**
+ * Legacy docs created before the `preferences` field existed have no
+ * preferences at all, so topic queries like `{ "preferences.leads": true }`
+ * never match them — an approved subscriber would silently receive nothing and
+ * not be counted. Backfill defaults so every doc is queryable.
+ */
+async function backfillMissingPreferences(
+  coll: import("mongodb").Collection<NotificationSubscriberDoc>
+) {
+  await coll.updateMany(
+    { preferences: { $exists: false } },
+    { $set: { preferences: defaultNotificationPreferences(), updatedAt: new Date() } }
+  );
 }
 
 const STATUS_RANK: Record<NotificationSubscriberStatus, number> = {
@@ -253,6 +269,9 @@ export async function updateNotificationSubscriber(
       normalizePreferences(existing.preferences),
       updates.preferences
     );
+  } else if (!existing.preferences) {
+    // Legacy doc with no preferences — write defaults so it stays queryable.
+    set.preferences = defaultNotificationPreferences();
   }
 
   const result = await db
