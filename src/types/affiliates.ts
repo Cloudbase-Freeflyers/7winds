@@ -47,6 +47,11 @@ export interface AffiliateStats {
   leads: number;
   vouchers: number;
   whatsappClicks: number;
+  /** Count of confirmed paid orders attributed to this affiliate. */
+  paidOrders: number;
+  /** Sum (₪) of confirmed paid order amounts — the commission basis. */
+  referredRevenue: number;
+  /** Commission earned on referredRevenue, via the monthly-volume schedule. */
   estimatedEarnings: number;
   pendingBalance: number;
 }

@@ -34,7 +34,7 @@ export default function LandingPageV2({ dev = false }: Props) {
           🧪 דף בדיקות — כולל מסלול תשלום בדיקה ב-₪5 · לא לשיתוף עם לקוחות
         </div>
       )}
-      <main>
+      <main id="main-content">
         <HeroV2 />
         <StatsBar />
         <VideoSectionV2 />

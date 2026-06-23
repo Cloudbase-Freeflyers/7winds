@@ -6,12 +6,9 @@ import { BRAND } from "@/lib/constants";
 import {
   AFFILIATE_SCENARIOS,
   CHART_DATA,
-  COMMISSION_TIERS,
+  GROUP_RATE,
   PACKAGE_COMMISSION_EXAMPLES,
-  VIP_EXAMPLES,
-  VOLUME_BONUSES,
-  commissionForBooking,
-  commissionRateForValue,
+  VOLUME_RATE_TIERS,
   formatIls,
 } from "@/lib/affiliate-commission";
 
@@ -20,19 +17,16 @@ const ACCENT = {
     bg: "bg-brand-sky/10",
     border: "border-brand-sky/30",
     text: "text-brand-sky",
-    bar: "#1ABBEF",
   },
   green: {
     bg: "bg-brand-green/10",
     border: "border-brand-green/30",
     text: "text-brand-green",
-    bar: "#8BC441",
   },
   yellow: {
     bg: "bg-brand-yellow/20",
     border: "border-brand-yellow/50",
     text: "text-brand-black",
-    bar: "#FDD62A",
   },
 } as const;
 
@@ -61,8 +55,8 @@ export default function AffiliateCommissionProposal() {
             מבנה עמלות שותפים
           </h1>
           <p className="mt-4 text-white/85 text-base sm:text-lg leading-relaxed">
-            תוכנית עמלות מדורגת לעידוד הפניות, חבילות פרימיום ומכירות חודשיות
-            עקביות — מותאמת לטיסות טנדם בישראל (₪).
+            עמלה מדורגת לפי מחזור מכירות חודשי — ככל שמפנים יותר, השיעור עולה.
+            מותאם לטיסות טנדם בישראל (₪).
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/affiliate/login" className="btn-primary btn-md">
@@ -77,30 +71,29 @@ export default function AffiliateCommissionProposal() {
 
       {/* KPI strip */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <KpiCard label="עמלה בסיסית" value="10–15%" hint="לפי ערך הזמנה" />
-        <KpiCard label="בונוס חודשי" value="עד ₪2,000" hint="מעל ₪20K הכנסה" />
-        <KpiCard label="ממוצע הזמנה" value="₪700–₪1,200" hint="טandem + שוברים" />
+        <KpiCard label="שיעור התחלתי" value="10%" hint="עד ₪2,000 מכירות בחודש" />
+        <KpiCard label="שיעור ביניים" value="12%" hint="₪2,000–₪5,000 בחודש" />
+        <KpiCard label="שיעור מוביל" value="15%" hint="מעל ₪5,000 בחודש" />
       </div>
 
-      {/* Base commission */}
+      {/* Volume tiers */}
       <Section
         id="structure"
-        title="מבנה עמלה בסיסי"
-        subtitle="שיעור עמלה לפי ערך הזמנה בודד — מעודד הפניות לחבילות גבוהות יותר"
+        title="מבנה עמלה לפי מחזור חודשי"
+        subtitle="השיעור נקבע לפי סך המכירות ששולמו והופנו על ידך באותו חודש — ומתאפס בכל תחילת חודש"
       >
         <div className="overflow-x-auto rounded-2xl ring-1 ring-black/5 bg-white shadow-sm">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-brand-soft border-b border-black/5">
-                <Th>ערך הזמנה</Th>
-                <Th>אחוז עמלה</Th>
+                <Th>מחזור חודשי</Th>
+                <Th>שיעור עמלה</Th>
                 <Th>דוגמה — עמלה</Th>
               </tr>
             </thead>
             <tbody>
-              {COMMISSION_TIERS.map((tier) => {
-                const sample =
-                  tier.max === 500 ? 450 : tier.max === 1000 ? 750 : 1500;
+              {VOLUME_RATE_TIERS.map((tier) => {
+                const sample = tier.max === Infinity ? 8_000 : tier.max;
                 return (
                   <tr key={tier.label} className="border-b border-black/5 last:border-0">
                     <Td>{tier.label}</Td>
@@ -108,7 +101,7 @@ export default function AffiliateCommissionProposal() {
                       <RateBadge rate={tier.rate} />
                     </Td>
                     <Td className="font-bold text-brand-green">
-                      {formatIls(commissionForBooking(sample))}{" "}
+                      {formatIls(Math.round(sample * (tier.rate / 100)))}{" "}
                       <span className="font-normal text-brand-dark/60">
                         (על {formatIls(sample)})
                       </span>
@@ -121,40 +114,11 @@ export default function AffiliateCommissionProposal() {
         </div>
       </Section>
 
-      {/* Performance bonus */}
-      <Section
-        id="bonuses"
-        title="בונוס ביצועים חודשי"
-        subtitle="בונוס נוסף מעל העמלה הרגילה — לפי סך ההכנסה שהופנתה בחודש (רמה הגבוהה ביותר שמגיעה)"
-      >
-        <div className="grid gap-4 sm:grid-cols-3">
-          {VOLUME_BONUSES.map((tier) => (
-            <div
-              key={tier.threshold}
-              className="rounded-2xl bg-white p-5 ring-1 ring-black/5 shadow-sm text-center"
-            >
-              <p className="text-xs font-bold text-brand-dark/70 uppercase tracking-wide">
-                הכנסה חודשית
-              </p>
-              <p className="font-display text-2xl font-extrabold mt-1">
-                {tier.label}
-              </p>
-              <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-brand-yellow/30 px-4 py-2">
-                <span className="text-sm text-brand-dark">+ בונוס</span>
-                <span className="font-display text-xl font-extrabold">
-                  {formatIls(tier.bonus)}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      {/* Commission dashboard */}
+      {/* Package price reference */}
       <Section
         id="dashboard"
-        title="לוח עמלות — מוצרי 7Winds"
-        subtitle="כמה מרוויחים על כל מוצר בפועל"
+        title="מחירון מוצרים — בסיס לחישוב"
+        subtitle="ערך כל הזמנה נספר לעבר המחזור החודשי. העמלה בפועל לפי השיעור החודשי שלך."
       >
         <div className="overflow-x-auto rounded-2xl ring-1 ring-black/5 bg-white shadow-sm">
           <table className="w-full text-sm">
@@ -162,81 +126,44 @@ export default function AffiliateCommissionProposal() {
               <tr className="bg-brand-soft border-b border-black/5">
                 <Th>מוצר / חבילה</Th>
                 <Th>ערך הזמנה</Th>
-                <Th>אחוז</Th>
-                <Th>עמלה לשותף</Th>
+                <Th>עמלה ב-10%</Th>
+                <Th>עמלה ב-12%</Th>
+                <Th>עמלה ב-15%</Th>
               </tr>
             </thead>
             <tbody>
-              {PACKAGE_COMMISSION_EXAMPLES.map((pkg) => {
-                const rate = commissionRateForValue(pkg.value);
-                const earned = commissionForBooking(pkg.value);
-                return (
-                  <tr key={pkg.package} className="border-b border-black/5">
-                    <Td>{pkg.label}</Td>
-                    <Td>{formatIls(pkg.value)}</Td>
-                    <Td>
-                      <RateBadge rate={rate} />
-                    </Td>
-                    <Td className="font-bold text-brand-green">{formatIls(earned)}</Td>
-                  </tr>
-                );
-              })}
-              {VIP_EXAMPLES.map((vip) => {
-                const rate = commissionRateForValue(vip.value);
-                const earned = commissionForBooking(vip.value);
-                return (
-                  <tr
-                    key={vip.label}
-                    className="border-b border-black/5 last:border-0 bg-brand-yellow/5"
-                  >
-                    <Td>
-                      <span className="font-bold">{vip.label}</span>
-                      <span className="ms-2 text-xs rounded-full bg-brand-yellow/40 px-2 py-0.5">
-                        VIP
-                      </span>
-                    </Td>
-                    <Td>{formatIls(vip.value)}</Td>
-                    <Td>
-                      <RateBadge rate={rate} />
-                    </Td>
-                    <Td className="font-bold text-brand-green">{formatIls(earned)}</Td>
-                  </tr>
-                );
-              })}
+              {PACKAGE_COMMISSION_EXAMPLES.map((pkg) => (
+                <tr key={pkg.package} className="border-b border-black/5 last:border-0">
+                  <Td>{pkg.label}</Td>
+                  <Td>{formatIls(pkg.value)}</Td>
+                  <Td className="text-brand-dark">{formatIls(Math.round(pkg.value * 0.1))}</Td>
+                  <Td className="text-brand-dark">{formatIls(Math.round(pkg.value * 0.12))}</Td>
+                  <Td className="font-bold text-brand-green">
+                    {formatIls(Math.round(pkg.value * 0.15))}
+                  </Td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       </Section>
 
-      {/* Monthly performance dashboard template */}
+      {/* Group rate */}
       <Section
-        title="לוח ביצועים חודשי — תבנית"
-        subtitle="סיכום חודשי לכל שותף"
+        title="מחיר מיוחד לקבוצות"
+        subtitle="עסקאות קבוצתיות מתואמות אישית מול 7Winds"
       >
-        <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm overflow-hidden">
-          <div className="grid sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x sm:divide-x-reverse divide-black/5">
-            <PerfCell
-              label="הכנסה שהופנתה"
-              value={formatIls(AFFILIATE_SCENARIOS[1].monthlyRevenue)}
-              accent
-            />
-            <PerfCell
-              label="עמלות בסיס"
-              value={formatIls(AFFILIATE_SCENARIOS[1].commission)}
-            />
-            <PerfCell
-              label="בונוס חודשי"
-              value={formatIls(AFFILIATE_SCENARIOS[1].bonus)}
-              highlight
-            />
-            <PerfCell
-              label="סה״כ לתשלום"
-              value={formatIls(AFFILIATE_SCENARIOS[1].totalPayout)}
-              total
-            />
+        <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-6 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="font-display text-lg font-extrabold">
+              קבוצות של {GROUP_RATE.minParticipants}–{GROUP_RATE.maxParticipants} משתתפים
+            </p>
+            <p className="mt-1 text-sm text-brand-dark">
+              מחיר סוכן לטיסת חוויה 10 דקות — למשתתף
+            </p>
           </div>
-          <p className="px-5 py-3 text-xs text-brand-dark/60 bg-brand-soft border-t border-black/5">
-            * דוגמה לשותף פעיל — חישוב אוטומטי בלוח השותפים
+          <p className="font-display text-3xl font-extrabold text-brand-sky">
+            {formatIls(GROUP_RATE.agentPricePerPerson)}
           </p>
         </div>
       </Section>
@@ -245,7 +172,7 @@ export default function AffiliateCommissionProposal() {
       <Section
         id="scenarios"
         title="תרחישי רווח — 3 דוגמאות"
-        subtitle="חישוב מדויק לפי תמהיל הזמנות אמיתי של 7Winds"
+        subtitle="חישוב מדויק לפי מחזור חודשי והשיעור המתאים לו"
       >
         <div className="grid gap-6 lg:grid-cols-3">
           {AFFILIATE_SCENARIOS.map((scenario) => {
@@ -276,13 +203,8 @@ export default function AffiliateCommissionProposal() {
                 </ul>
 
                 <div className="mt-5 pt-4 border-t border-black/10 space-y-2 text-sm">
-                  <Row label="הכנסה חודשית" value={formatIls(scenario.monthlyRevenue)} />
-                  <Row label="עמלות" value={formatIls(scenario.commission)} />
-                  <Row
-                    label="בונוס"
-                    value={scenario.bonus ? formatIls(scenario.bonus) : "—"}
-                    highlight={scenario.bonus > 0}
-                  />
+                  <Row label="מחזור חודשי" value={formatIls(scenario.monthlyRevenue)} />
+                  <Row label="שיעור עמלה" value={`${scenario.rate}%`} highlight />
                   <Row
                     label="סה״כ לתשלום"
                     value={formatIls(scenario.totalPayout)}
@@ -299,14 +221,12 @@ export default function AffiliateCommissionProposal() {
       <Section
         id="chart"
         title="צמיחת רווח לפי נפח"
-        subtitle="הכנסה מול עמלה, בונוס וסה״כ תשלום — 3 רמות שותפים"
+        subtitle="מחזור מול עמלה — 3 רמות שותפים"
       >
         <div className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-6 sm:p-8">
           <div className="flex flex-wrap gap-4 mb-8 text-xs font-bold">
-            <Legend color="#1ABBEF" label="הכנסה שהופנתה" />
-            <Legend color="#8BC441" label="עמלות" />
-            <Legend color="#FDD62A" label="בונוס" />
-            <Legend color="#050606" label="סה״כ לשותף" />
+            <Legend color="#1ABBEF" label="מחזור שהופנה" />
+            <Legend color="#8BC441" label="עמלה לשותף" />
           </div>
 
           <div className="space-y-6">
@@ -317,10 +237,8 @@ export default function AffiliateCommissionProposal() {
                   <span className="text-brand-dark/70">{formatIls(row.revenue)}</span>
                 </div>
                 <div className="space-y-1.5">
-                  <Bar label="הכנסה" value={row.revenue} max={chartMax} color="#1ABBEF" />
-                  <Bar label="עמלות" value={row.commission} max={chartMax} color="#8BC441" />
-                  <Bar label="בונוס" value={row.bonus} max={chartMax} color="#FDD62A" />
-                  <Bar label="סה״כ" value={row.total} max={chartMax} color="#050606" />
+                  <Bar label="מחזור" value={row.revenue} max={chartMax} color="#1ABBEF" />
+                  <Bar label="עמלה" value={row.commission} max={chartMax} color="#8BC441" />
                 </div>
               </div>
             ))}
@@ -338,35 +256,33 @@ export default function AffiliateCommissionProposal() {
           <div className="rounded-[14px] bg-white p-6 sm:p-8 space-y-5">
             <div className="grid gap-4 sm:grid-cols-2">
               <RecBlock
-                title="למה המבנה הזה?"
+                title="למה מבנה לפי מחזור?"
                 items={[
-                  "10% על הזמנות קטנות (₪300–₪500) — מרווח בריא על טיסות ארסוף",
-                  "12% על טנדם צפון (₪750) — מניעה להפנות לחבילות עיקריות",
-                  "15% על VIP/קבוצות (₪1,001+) — תמריץ לשוברים משולבים וקבוצות",
+                  "פשוט וברור — שיעור אחד לחודש לפי סך המכירות",
+                  "מתגמל צמיחה — 12% מעל ₪2,000, 15% מעל ₪5,000",
+                  "מעודד שותפים להפנות באופן עקבי לאורך החודש",
                 ]}
               />
               <RecBlock
                 title="יתרונות לעסק"
                 items={[
-                  "עלות שיווק משתנה (CPA) — משלמים רק על מכירה",
-                  'בונוסים מדורגים מונעים "שחיקה" של שותפים פעילים',
-                  "מרווח גולמי נשמר גם ב-15% על חבילות ₪2,500+",
+                  "עלות שיווק משתנה (CPA) — משלמים רק על מכירה ששולמה",
+                  "מרווח גולמי נשמר גם בשיעור 15%",
+                  "אין בונוסים כפולים לעקוב אחריהם — חישוב חודשי אחד",
                 ]}
               />
             </div>
 
             <div className="rounded-xl bg-brand-soft p-5 border border-brand-sky/20">
-              <p className="font-display font-extrabold text-lg mb-2">
-                סיכום מומלץ
-              </p>
+              <p className="font-display font-extrabold text-lg mb-2">סיכום מומלץ</p>
               <p className="text-brand-dark leading-relaxed text-sm sm:text-base">
-                עבור 7Winds, מבנה של{" "}
-                <strong>10% / 12% / 15%</strong> עם בונוסים חודשיים של{" "}
-                <strong>₪250 / ₪750 / ₪2,000</strong> מספק תמריץ חזק לשותפים
-                תוכן, מדריכים ומלונות — תוך שמירה על רווחיות. שותף שמפנה 8 טיסות
-                טנדם בחודש (≈{formatIls(AFFILIATE_SCENARIOS[1].monthlyRevenue)}) מרוויח כ-
+                עבור 7Winds, שיעור עמלה מדורג לפי מחזור חודשי —{" "}
+                <strong>10% / 12% / 15%</strong> בספים של{" "}
+                <strong>₪2,000</strong> ו-<strong>₪5,000</strong> — מספק תמריץ חזק
+                לשותפי תוכן, מדריכים ומלונות תוך שמירה על רווחיות. שותף שמפנה כ-
+                {formatIls(AFFILIATE_SCENARIOS[1].monthlyRevenue)} בחודש מרוויח כ-
                 <strong>{formatIls(AFFILIATE_SCENARIOS[1].totalPayout)}</strong>; שותף
-                מוביל (₪25,000+) מגיע ל-
+                מוביל ({formatIls(AFFILIATE_SCENARIOS[2].monthlyRevenue)}+) מגיע ל-
                 <strong>{formatIls(AFFILIATE_SCENARIOS[2].totalPayout)}+</strong> בחודש.
               </p>
             </div>
@@ -384,7 +300,7 @@ export default function AffiliateCommissionProposal() {
       </Section>
 
       <footer className="text-center text-xs text-brand-dark/50 pt-4">
-        {BRAND.hebrewName} · מסמך פנימי / הצעה לשותפים · {new Date().getFullYear()}
+        {BRAND.hebrewName} · מסמך פנימי / הצעה לשותפים
       </footer>
     </div>
   );
@@ -457,43 +373,6 @@ function RateBadge({ rate }: { rate: number }) {
     <span className="inline-flex rounded-full bg-brand-sky/15 text-brand-sky font-bold px-2.5 py-0.5 text-xs">
       {rate}%
     </span>
-  );
-}
-
-function PerfCell({
-  label,
-  value,
-  accent,
-  highlight,
-  total,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-  highlight?: boolean;
-  total?: boolean;
-}) {
-  return (
-    <div
-      className={`p-5 text-center ${
-        total ? "bg-brand-black text-white" : highlight ? "bg-brand-yellow/15" : ""
-      }`}
-    >
-      <p
-        className={`text-xs font-bold uppercase tracking-wide ${
-          total ? "text-white/70" : "text-brand-dark/60"
-        }`}
-      >
-        {label}
-      </p>
-      <p
-        className={`font-display text-2xl font-extrabold mt-1 ${
-          accent ? "text-brand-sky" : highlight ? "text-brand-black" : ""
-        }`}
-      >
-        {value}
-      </p>
-    </div>
   );
 }
 

@@ -22,6 +22,7 @@ interface AffiliateRow {
 
 export default function AffiliateManager() {
   const [rows, setRows] = useState<AffiliateRow[]>([]);
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -76,6 +77,15 @@ export default function AffiliateManager() {
   }, [load]);
 
   const selected = rows.find((r) => r._id === selectedId) ?? null;
+
+  const q = query.trim().toLowerCase();
+  const filteredRows = q
+    ? rows.filter((r) =>
+        [r.name, r.code, r.email, r.phone]
+          .filter(Boolean)
+          .some((v) => v!.toLowerCase().includes(q))
+      )
+    : rows;
 
   useEffect(() => {
     if (!selected) {
@@ -232,7 +242,7 @@ export default function AffiliateManager() {
   }
 
   function formatCommission(rate: number, type: "percent" | "fixed") {
-    return type === "percent" ? `${rate}%` : `₪${rate}`;
+    return type === "percent" ? "מדורג 10–15%" : `₪${rate} לפעולה`;
   }
 
   function copyLink(code: string) {
@@ -274,8 +284,20 @@ export default function AffiliateManager() {
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <h2 className="font-display text-lg font-extrabold">כל השותפים</h2>
           <p className="text-sm text-brand-dark">
-            {rows.length} שותפים · לחצו על שורה לצפייה בפרטים
+            {q ? `${filteredRows.length} מתוך ${rows.length}` : `${rows.length} שותפים`} · לחצו על שורה לצפייה בפרטים
           </p>
+        </div>
+
+        <div className="relative mb-4">
+          <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-brand-dark/40">
+            🔍
+          </span>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="חיפוש לפי שם, קוד, אימייל או טלפון…"
+            className={`${inputCls} ps-9`}
+          />
         </div>
 
         {error && (
@@ -294,7 +316,8 @@ export default function AffiliateManager() {
                 <Th>סטטוס</Th>
                 <Th>ביקורים</Th>
                 <Th>לידים</Th>
-                <Th>שוברים</Th>
+                <Th>מכירות</Th>
+                <Th>מחזור</Th>
                 <Th>עמלה</Th>
                 <Th>עמלה משוערת</Th>
                 <Th>יתרה</Th>
@@ -305,19 +328,26 @@ export default function AffiliateManager() {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={12} className="px-4 py-8 text-center text-brand-dark">
+                  <td colSpan={13} className="px-4 py-8 text-center text-brand-dark">
                     טוען…
                   </td>
                 </tr>
               )}
               {!loading && rows.length === 0 && (
                 <tr>
-                  <td colSpan={12} className="px-4 py-8 text-center text-brand-dark">
+                  <td colSpan={13} className="px-4 py-8 text-center text-brand-dark">
                     אין שותפים עדיין
                   </td>
                 </tr>
               )}
-              {rows.map((r) => (
+              {!loading && rows.length > 0 && filteredRows.length === 0 && (
+                <tr>
+                  <td colSpan={13} className="px-4 py-8 text-center text-brand-dark">
+                    אין תוצאות עבור “{query}”
+                  </td>
+                </tr>
+              )}
+              {filteredRows.map((r) => (
                 <tr
                   key={r._id}
                   onClick={() => selectAffiliate(r._id, "view")}
@@ -343,7 +373,8 @@ export default function AffiliateManager() {
                   </Td>
                   <Td>{r.stats.visits}</Td>
                   <Td>{r.stats.leads}</Td>
-                  <Td>{r.stats.vouchers}</Td>
+                  <Td>{r.stats.paidOrders}</Td>
+                  <Td>₪{r.stats.referredRevenue}</Td>
                   <Td>{formatCommission(r.commissionRate, r.commissionType)}</Td>
                   <Td>₪{r.stats.estimatedEarnings}</Td>
                   <Td>₪{r.stats.pendingBalance}</Td>
@@ -460,17 +491,7 @@ export default function AffiliateManager() {
               />
             </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="עמלה">
-                <input
-                  type="number"
-                  min={0}
-                  value={commissionRate}
-                  onChange={(e) => setCommissionRate(e.target.value)}
-                  required
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="סוג">
+              <Field label="סוג עמלה">
                 <select
                   value={commissionType}
                   onChange={(e) =>
@@ -478,11 +499,28 @@ export default function AffiliateManager() {
                   }
                   className={inputCls}
                 >
-                  <option value="percent">אחוזים %</option>
+                  <option value="percent">מדורג לפי מחזור %</option>
                   <option value="fixed">סכום קבוע ₪</option>
                 </select>
               </Field>
+              {commissionType === "fixed" && (
+                <Field label="₪ לפעולה">
+                  <input
+                    type="number"
+                    min={0}
+                    value={commissionRate}
+                    onChange={(e) => setCommissionRate(e.target.value)}
+                    required
+                    className={inputCls}
+                  />
+                </Field>
+              )}
             </div>
+            {commissionType === "percent" && (
+              <p className="text-xs text-brand-dark/70 -mt-1">
+                השיעור נקבע אוטומטית לפי מחזור חודשי: 10% / 12% / 15%.
+              </p>
+            )}
             <Field label="הערות">
               <textarea
                 value={notes}
@@ -587,16 +625,6 @@ export default function AffiliateManager() {
                       />
                     </Field>
                     <div className="grid grid-cols-2 gap-2">
-                      <Field label="עמלה">
-                        <input
-                          type="number"
-                          min={0}
-                          value={editCommissionRate}
-                          onChange={(e) => setEditCommissionRate(e.target.value)}
-                          required
-                          className={inputCls}
-                        />
-                      </Field>
                       <Field label="סוג עמלה">
                         <select
                           value={editCommissionType}
@@ -605,11 +633,28 @@ export default function AffiliateManager() {
                           }
                           className={inputCls}
                         >
-                          <option value="percent">אחוזים %</option>
+                          <option value="percent">מדורג לפי מחזור %</option>
                           <option value="fixed">סכום קבוע ₪</option>
                         </select>
                       </Field>
+                      {editCommissionType === "fixed" && (
+                        <Field label="₪ לפעולה">
+                          <input
+                            type="number"
+                            min={0}
+                            value={editCommissionRate}
+                            onChange={(e) => setEditCommissionRate(e.target.value)}
+                            required
+                            className={inputCls}
+                          />
+                        </Field>
+                      )}
                     </div>
+                    {editCommissionType === "percent" && (
+                      <p className="text-xs text-brand-dark/70">
+                        השיעור נקבע אוטומטית לפי מחזור חודשי: 10% / 12% / 15%.
+                      </p>
+                    )}
                     <Field label="הערות">
                       <textarea
                         value={editNotes}
@@ -803,8 +848,12 @@ export default function AffiliateManager() {
             <div className="grid grid-cols-2 gap-2 text-sm">
               <Stat label="ביקורים" value={selected.stats.visits} />
               <Stat label="לידים" value={selected.stats.leads} />
-              <Stat label="שוברים" value={selected.stats.vouchers} />
+              <Stat label="מכירות ששולמו" value={selected.stats.paidOrders} />
               <Stat label="וואטסאפ" value={selected.stats.whatsappClicks} />
+              <Stat
+                label="מחזור שהופנה"
+                value={`₪${selected.stats.referredRevenue}`}
+              />
               <Stat
                 label="עמלה משוערת"
                 value={`₪${selected.stats.estimatedEarnings}`}

@@ -26,8 +26,9 @@ export default function Footer() {
             <li><a className="hover:text-white" href="#pricing">מחירים</a></li>
             <li><a className="hover:text-white" href="#experience">החוויה</a></li>
             <li><a className="hover:text-white" href="#voucher">שוברי מתנה</a></li>
-            <li><a className="hover:text-white" href="#accessibility">נגישות</a></li>
+            <li><a className="hover:text-white" href="#accessibility">טיסות מותאמות</a></li>
             <li><a className="hover:text-white" href="#contact">צרו קשר</a></li>
+            <li><a className="hover:text-white" href="/accessibility-statement">הצהרת נגישות</a></li>
           </ul>
         </div>
 
@@ -56,7 +57,12 @@ export default function Footer() {
       <div className="border-t border-white/10">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-white/50">
           <p>© {new Date().getFullYear()} 7Winds Paragliding Club. כל הזכויות שמורות.</p>
-          <p>טיסות בכפוף לתנאי מזג האוויר ובאישור מדריך מוסמך.</p>
+          <p className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+            <span>טיסות בכפוף לתנאי מזג האוויר ובאישור מדריך מוסמך.</span>
+            <a href="/accessibility-statement" className="hover:text-white underline">
+              הצהרת נגישות
+            </a>
+          </p>
         </div>
       </div>
     </footer>

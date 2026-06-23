@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Heebo, Assistant, Rubik } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
+import AccessibilityWidget from "@/components/AccessibilityWidget";
 import { GA_ID, PIXEL_ID } from "@/lib/analytics";
 import { BRAND } from "@/lib/constants";
 
@@ -84,7 +85,14 @@ export default function RootLayout({
       className={`${heebo.variable} ${assistant.variable} ${rubik.variable}`}
     >
       <body className="font-sans">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-[10000] focus:rounded-xl focus:bg-brand-sky focus:px-4 focus:py-2 focus:text-white focus:font-bold"
+        >
+          דילוג לתוכן הראשי
+        </a>
         {children}
+        <AccessibilityWidget />
 
         {GA_ID && (
           <>

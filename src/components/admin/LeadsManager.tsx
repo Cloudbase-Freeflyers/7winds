@@ -52,6 +52,7 @@ type EditTarget =
 export default function LeadsManager() {
   const [leads, setLeads] = useState<LeadRow[]>([]);
   const [vouchers, setVouchers] = useState<VoucherRow[]>([]);
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -155,6 +156,16 @@ export default function LeadsManager() {
     }
   }
 
+  const q = query.trim().toLowerCase();
+  const match = (...vals: (string | undefined)[]) =>
+    !q || vals.filter(Boolean).some((v) => v!.toLowerCase().includes(q));
+  const filteredLeads = leads.filter((l) =>
+    match(l.name, l.phone, l.message, l.affiliateCode)
+  );
+  const filteredVouchers = vouchers.filter((v) =>
+    match(v.buyerName, v.buyerPhone, v.buyerEmail, v.recipientName, v.affiliateCode)
+  );
+
   return (
     <>
       {error && (
@@ -167,8 +178,22 @@ export default function LeadsManager() {
         <p className="text-brand-dark text-sm mb-4">טוען…</p>
       )}
 
+      <div className="relative mb-6">
+        <span className="pointer-events-none absolute inset-y-0 start-3 flex items-center text-brand-dark/40">
+          🔍
+        </span>
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="חיפוש לפי שם, טלפון, אימייל או קוד שותף…"
+          className={`${inputCls} ps-9`}
+        />
+      </div>
+
       <section>
-        <h2 className="font-display text-xl font-extrabold">לידים ({leads.length})</h2>
+        <h2 className="font-display text-xl font-extrabold">
+          לידים ({q ? `${filteredLeads.length}/${leads.length}` : leads.length})
+        </h2>
         <div className="mt-3 overflow-x-auto rounded-2xl bg-white ring-1 ring-black/5 shadow-sm">
           <table className="min-w-full text-sm">
             <thead className="bg-brand-soft text-brand-dark">
@@ -184,14 +209,14 @@ export default function LeadsManager() {
               </tr>
             </thead>
             <tbody>
-              {!loading && leads.length === 0 && (
+              {!loading && filteredLeads.length === 0 && (
                 <tr>
                   <td colSpan={8} className="px-4 py-6 text-center text-brand-dark">
-                    אין לידים עדיין
+                    {q ? `אין תוצאות עבור “${query}”` : "אין לידים עדיין"}
                   </td>
                 </tr>
               )}
-              {leads.map((l) => (
+              {filteredLeads.map((l) => (
                 <tr key={l._id} className="border-t border-black/5">
                   <Td>{formatDate(l.createdAt)}</Td>
                   <Td>{l.name}</Td>
@@ -224,7 +249,7 @@ export default function LeadsManager() {
 
       <section className="mt-10">
         <h2 className="font-display text-xl font-extrabold">
-          בקשות שובר ({vouchers.length})
+          בקשות שובר ({q ? `${filteredVouchers.length}/${vouchers.length}` : vouchers.length})
         </h2>
         <div className="mt-3 overflow-x-auto rounded-2xl bg-white ring-1 ring-black/5 shadow-sm">
           <table className="min-w-full text-sm">
@@ -242,14 +267,14 @@ export default function LeadsManager() {
               </tr>
             </thead>
             <tbody>
-              {!loading && vouchers.length === 0 && (
+              {!loading && filteredVouchers.length === 0 && (
                 <tr>
                   <td colSpan={9} className="px-4 py-6 text-center text-brand-dark">
-                    אין בקשות שובר עדיין
+                    {q ? `אין תוצאות עבור “${query}”` : "אין בקשות שובר עדיין"}
                   </td>
                 </tr>
               )}
-              {vouchers.map((v) => (
+              {filteredVouchers.map((v) => (
                 <tr key={v._id} className="border-t border-black/5">
                   <Td>{formatDate(v.createdAt)}</Td>
                   <Td>{v.buyerName}</Td>

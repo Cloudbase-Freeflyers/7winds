@@ -44,7 +44,8 @@ em, i {
          disabled:opacity-60 disabled:cursor-not-allowed;
 }
 .btn-lg { @apply px-6 py-3 text-base; }
-.btn-md { @apply px-6 py-3 text-base; }
+.btn-md { @apply px-5 py-2.5 text-sm sm:text-base; }
+.btn-sm { @apply px-3.5 py-2 text-xs sm:text-sm; }
 
 .btn-primary {
   @apply btn bg-brand-yellow text-brand-black hover:brightness-95 shadow-lg shadow-brand-yellow/30;
@@ -62,4 +63,59 @@ em, i {
 /* Hero halo dots */
 .hero-cloud {
   @apply absolute rounded-full blur-3xl opacity-50 animate-floaty;
+}
+
+/* ── Accessibility widget modes (toggled via data-* on <html>) ── */
+
+html[data-a11y-font="1"] {
+  font-size: 112.5%;
+}
+
+html[data-a11y-font="2"] {
+  font-size: 125%;
+}
+
+html[data-a11y-readable-font="1"] body {
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+
+html[data-a11y-no-animations="1"] *,
+html[data-a11y-no-animations="1"] *::before,
+html[data-a11y-no-animations="1"] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-a11y-grayscale="1"] {
+  filter: grayscale(1);
+}
+
+html[data-a11y-highlight-links="1"] a {
+  text-decoration: underline !important;
+  text-underline-offset: 3px;
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+html[data-a11y-high-contrast="1"] body {
+  background: #000 !important;
+  color: #fff !important;
+}
+
+html[data-a11y-high-contrast="1"] a {
+  color: #ff0 !important;
+}
+
+html[data-a11y-high-contrast="1"] button,
+html[data-a11y-high-contrast="1"] input,
+html[data-a11y-high-contrast="1"] select,
+html[data-a11y-high-contrast="1"] textarea {
+  background: #000 !important;
+  color: #fff !important;
+  border: 2px solid #fff !important;
+}
+
+html[data-a11y-high-contrast="1"] img {
+  filter: contrast(1.2);
 }

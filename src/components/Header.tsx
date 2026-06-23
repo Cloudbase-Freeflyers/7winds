@@ -6,7 +6,7 @@ const NAV = [
   { href: "#pricing", label: "מחירים" },
   { href: "#experience", label: "החוויה" },
   { href: "#voucher", label: "שוברי מתנה" },
-  { href: "#accessibility", label: "נגישות" },
+  { href: "#accessibility", label: "טיסות מותאמות" },
   { href: "#booking", label: "קביעת טיסה" },
 ];
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { AffiliateStats } from "@/types/affiliates";
 
@@ -77,7 +78,7 @@ export default function AffiliateDashboard() {
   const { affiliate, stats } = data;
   const commissionLabel =
     affiliate.commissionType === "percent"
-      ? `${affiliate.commissionRate}%`
+      ? "מדורג 10–15% לפי מחזור חודשי"
       : `₪${affiliate.commissionRate} לפעולה`;
 
   return (
@@ -99,11 +100,12 @@ export default function AffiliateDashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="ביקורים" value={stats.visits} />
         <StatCard label="לידים" value={stats.leads} />
-        <StatCard label="שוברים" value={stats.vouchers} />
+        <StatCard label="מכירות ששולמו" value={stats.paidOrders} />
         <StatCard label="לחיצות וואטסאפ" value={stats.whatsappClicks} />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="מחזור שהופנה" value={`₪${stats.referredRevenue}`} />
         <StatCard
           label="עמלה משוערת"
           value={`₪${stats.estimatedEarnings}`}
@@ -116,6 +118,10 @@ export default function AffiliateDashboard() {
           highlight
         />
       </div>
+
+      <p className="text-xs text-brand-dark/70 -mt-2">
+        * העמלה מחושבת על מכירות ששולמו בלבד, לפי מחזור חודשי (10% / 12% / 15%).
+      </p>
 
       <div className="rounded-2xl bg-white ring-1 ring-black/5 p-5 shadow-sm">
         <h2 className="font-display text-lg font-extrabold">הקישור שלך</h2>
@@ -161,6 +167,21 @@ export default function AffiliateDashboard() {
             התשלום שלך מסומן כממתין — ניצור איתך קשר בקרוב.
           </p>
         )}
+      </div>
+
+      <div className="rounded-2xl bg-sky-gradient p-[2px] shadow-sm">
+        <div className="rounded-[14px] bg-white p-5 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-display text-lg font-extrabold">תוכנית התגמול</h2>
+            <p className="mt-1 text-sm text-brand-dark">
+              מבנה העמלות המלא, בונוסים חודשיים ותרחישי רווח — כך מחושבת
+              העמלה שלך.
+            </p>
+          </div>
+          <Link href="/affiliate/proposal" className="btn-primary btn-md shrink-0">
+            צפה בתוכנית העמלות ↗
+          </Link>
+        </div>
       </div>
     </div>
   );

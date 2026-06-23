@@ -226,3 +226,13 @@ export const BUTTON_MICROCOPY = [
   "בואו נמריא",
   "שלחו וואטסאפ",
 ] as const;
+
+/** Web accessibility statement — update coordinator details as needed. */
+export const ACCESSIBILITY_STATEMENT = {
+  standard: "ת\"י 5568 ברמת AA",
+  lastUpdated: "23 ביוני 2025",
+  coordinator: {
+    name: "7Winds Paragliding Club",
+    email: process.env.NEXT_PUBLIC_ACCESSIBILITY_EMAIL || "",
+  },
+} as const;

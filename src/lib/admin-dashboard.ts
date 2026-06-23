@@ -22,6 +22,13 @@ export const MAIN_MARKETING_PAGES: MarketingPageLink[] = [
     type: "main",
   },
   {
+    id: "v2",
+    label: "דף נחיתה — גרסה 2",
+    path: "/v2",
+    description: "גרסת וידאו/חוויה — לקמפיינים ממוקדים",
+    type: "main",
+  },
+  {
     id: "dev",
     label: "דף בדיקות (dev)",
     path: "/dev",
@@ -33,6 +40,13 @@ export const MAIN_MARKETING_PAGES: MarketingPageLink[] = [
     label: "תוכנית עמלות שותפים",
     path: "/affiliate/proposal",
     description: "הצעת מבנה עמלות — noindex",
+    type: "main",
+  },
+  {
+    id: "affiliate-login",
+    label: "כניסת שותפים",
+    path: "/affiliate/login",
+    description: "פורטל התחברות לשותפים",
     type: "main",
   },
   {
@@ -82,6 +96,45 @@ export const MAIN_MARKETING_PAGES: MarketingPageLink[] = [
   },
 ];
 
+/** Internal management & portal pages — direct admin navigation, not for sharing */
+export const SYSTEM_PAGES: MarketingPageLink[] = [
+  {
+    id: "admin-home",
+    label: "לוח בקרה",
+    path: "/admin",
+    description: "סקירה כללית",
+    type: "main",
+  },
+  {
+    id: "admin-leads",
+    label: "לידים ושוברים",
+    path: "/admin/leads",
+    description: "ניהול פניות והזמנות שוברים",
+    type: "main",
+  },
+  {
+    id: "admin-affiliates",
+    label: "ניהול שותפים",
+    path: "/admin/affiliates",
+    description: "יצירה, עריכה, QR ותשלומים",
+    type: "main",
+  },
+  {
+    id: "affiliate-portal-login",
+    label: "כניסת שותפים",
+    path: "/affiliate/login",
+    description: "פורטל התחברות לשותפים",
+    type: "main",
+  },
+  {
+    id: "affiliate-portal-dashboard",
+    label: "לוח שותפים",
+    path: "/affiliate/dashboard",
+    description: "תצוגת השותף (דורש התחברות)",
+    type: "main",
+  },
+];
+
 export interface DashboardAffiliateRow {
   _id: string;
   name: string;
@@ -101,6 +154,18 @@ export interface DashboardData {
     visits: number;
     activeAffiliates: number;
     pendingPayouts: number;
+  };
+  revenue: {
+    /** Confirmed paid revenue across all orders (₪). */
+    paidRevenue: number;
+    /** Count of confirmed paid orders. */
+    paidOrders: number;
+    /** Total commission owed to affiliates on confirmed sales (₪). */
+    commissionOwed: number;
+    /** Total commission already paid out (₪). */
+    commissionPaid: number;
+    /** Outstanding commission balance to pay (₪). */
+    commissionPending: number;
   };
   affiliates: DashboardAffiliateRow[];
   marketingPages: MarketingPageLink[];
@@ -124,6 +189,13 @@ export async function loadDashboardData(): Promise<DashboardData> {
       activeAffiliates: 0,
       pendingPayouts: 0,
     },
+    revenue: {
+      paidRevenue: 0,
+      paidOrders: 0,
+      commissionOwed: 0,
+      commissionPaid: 0,
+      commissionPending: 0,
+    },
     affiliates: [],
     marketingPages: MAIN_MARKETING_PAGES,
     siteUrl: BRAND.url,
@@ -132,15 +204,35 @@ export async function loadDashboardData(): Promise<DashboardData> {
 
   try {
     const db = await getDb();
-    const [leadCount, voucherCount, affiliateLeadCount, affiliateVoucherCount, visitCount, affiliates] =
-      await Promise.all([
-        db.collection("leads").countDocuments(),
-        db.collection("vouchers").countDocuments(),
-        db.collection("leads").countDocuments({ affiliateCode: { $exists: true, $ne: "" } }),
-        db.collection("vouchers").countDocuments({ affiliateCode: { $exists: true, $ne: "" } }),
-        db.collection("affiliate_events").countDocuments({ type: "visit" }),
-        listAffiliates(),
-      ]);
+    const [
+      leadCount,
+      voucherCount,
+      affiliateLeadCount,
+      affiliateVoucherCount,
+      visitCount,
+      paidAgg,
+      affiliates,
+    ] = await Promise.all([
+      db.collection("leads").countDocuments(),
+      db.collection("vouchers").countDocuments(),
+      db.collection("leads").countDocuments({ affiliateCode: { $exists: true, $ne: "" } }),
+      db.collection("vouchers").countDocuments({ affiliateCode: { $exists: true, $ne: "" } }),
+      db.collection("affiliate_events").countDocuments({ type: "visit" }),
+      db
+        .collection("vouchers")
+        .aggregate<{ revenue: number; orders: number }>([
+          { $match: { paymentStatus: "paid" } },
+          {
+            $group: {
+              _id: null,
+              revenue: { $sum: { $ifNull: ["$amount", 0] } },
+              orders: { $sum: 1 },
+            },
+          },
+        ])
+        .toArray(),
+      listAffiliates(),
+    ]);
 
     const affiliateRows: DashboardAffiliateRow[] = affiliates.map((a) => ({
       _id: String(a._id),
@@ -167,6 +259,10 @@ export async function loadDashboardData(): Promise<DashboardData> {
       (a) => a.stats.pendingBalance > 0 || a.payoutStatus === "pending"
     ).length;
 
+    const commissionOwed = affiliates.reduce((sum, a) => sum + a.stats.estimatedEarnings, 0);
+    const commissionPaid = affiliates.reduce((sum, a) => sum + a.totalPaid, 0);
+    const commissionPending = affiliates.reduce((sum, a) => sum + a.stats.pendingBalance, 0);
+
     return {
       totals: {
         leads: leadCount,
@@ -176,6 +272,13 @@ export async function loadDashboardData(): Promise<DashboardData> {
         visits: visitCount,
         activeAffiliates,
         pendingPayouts,
+      },
+      revenue: {
+        paidRevenue: paidAgg[0]?.revenue ?? 0,
+        paidOrders: paidAgg[0]?.orders ?? 0,
+        commissionOwed,
+        commissionPaid,
+        commissionPending,
       },
       affiliates: affiliateRows,
       marketingPages: [...MAIN_MARKETING_PAGES, ...affiliatePages],

@@ -1,17 +1,17 @@
 import { ObjectId } from "mongodb";
 import { affiliateUrl, slugifyCode } from "@/lib/affiliate-utils";
 import { getDb } from "@/lib/mongodb";
-import { PACKAGE_PRICES, type VoucherPackage } from "@/lib/constants";
+import { commissionForMonth } from "@/lib/affiliate-commission";
+import { PACKAGE_PRICES, type ProductPackage } from "@/lib/constants";
 import type {
   AffiliateDoc,
   AffiliateEventDoc,
   AffiliateEventType,
   AffiliateStats,
 } from "@/types/affiliates";
+import type { VoucherDoc } from "@/types/submissions";
 
 export { affiliateUrl, slugifyCode };
-
-const DEFAULT_LEAD_VALUE = 400;
 
 let indexEnsured = false;
 
@@ -84,39 +84,64 @@ export async function recordAffiliateEvent(
   await db.collection<AffiliateEventDoc>("affiliate_events").insertOne(doc);
 }
 
+/** A confirmed, paid order attributed to an affiliate. */
+interface PaidOrder {
+  amount: number;
+  /** Calendar month key (e.g. "2026-06") for monthly-volume tiering. */
+  month: string;
+}
+
+function orderAmount(doc: VoucherDoc): number {
+  if (typeof doc.amount === "number" && doc.amount > 0) return doc.amount;
+  return PACKAGE_PRICES[doc.package as ProductPackage] ?? 0;
+}
+
+function monthKey(date?: Date): string {
+  const d = date ?? new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/**
+ * Commission on confirmed paid orders.
+ * - `fixed` affiliates: flat amount per paid order.
+ * - `percent` affiliates: monthly-volume schedule — orders are grouped by month,
+ *   each month's revenue gets its tier rate, and the months are summed.
+ */
 export function estimateEarnings(
   affiliate: AffiliateDoc,
-  counts: { leads: number; vouchers: number },
-  voucherPackages: VoucherPackage[] = []
+  paidOrders: PaidOrder[]
 ): number {
   if (affiliate.commissionType === "fixed") {
-    return (counts.leads + counts.vouchers) * affiliate.commissionRate;
+    return paidOrders.length * affiliate.commissionRate;
   }
 
-  const leadEarnings =
-    counts.leads * DEFAULT_LEAD_VALUE * (affiliate.commissionRate / 100);
+  const revenueByMonth = new Map<string, number>();
+  for (const order of paidOrders) {
+    revenueByMonth.set(order.month, (revenueByMonth.get(order.month) ?? 0) + order.amount);
+  }
 
-  const voucherEarnings = voucherPackages.reduce((sum, pkg) => {
-    const price = PACKAGE_PRICES[pkg] ?? DEFAULT_LEAD_VALUE;
-    return sum + price * (affiliate.commissionRate / 100);
-  }, 0);
-
-  return Math.round(leadEarnings + voucherEarnings);
+  let total = 0;
+  for (const monthlyRevenue of revenueByMonth.values()) {
+    total += commissionForMonth(monthlyRevenue);
+  }
+  return Math.round(total);
 }
 
 export async function getAffiliateStats(
   affiliateId: string
 ): Promise<AffiliateStats> {
-  if (!ObjectId.isValid(affiliateId)) {
-    return {
-      visits: 0,
-      leads: 0,
-      vouchers: 0,
-      whatsappClicks: 0,
-      estimatedEarnings: 0,
-      pendingBalance: 0,
-    };
-  }
+  const empty: AffiliateStats = {
+    visits: 0,
+    leads: 0,
+    vouchers: 0,
+    whatsappClicks: 0,
+    paidOrders: 0,
+    referredRevenue: 0,
+    estimatedEarnings: 0,
+    pendingBalance: 0,
+  };
+
+  if (!ObjectId.isValid(affiliateId)) return empty;
 
   await ensureIndexes();
   const db = await getDb();
@@ -126,56 +151,35 @@ export async function getAffiliateStats(
     .collection<AffiliateDoc>("affiliates")
     .findOne({ _id: oid });
 
-  if (!affiliate) {
-    return {
-      visits: 0,
-      leads: 0,
-      vouchers: 0,
-      whatsappClicks: 0,
-      estimatedEarnings: 0,
-      pendingBalance: 0,
-    };
-  }
+  if (!affiliate) return empty;
 
-  const [visits, leads, vouchers, whatsappClicks, voucherDocs] =
-    await Promise.all([
-      db.collection("affiliate_events").countDocuments({
-        affiliateId: oid,
-        type: "visit",
-      }),
-      db.collection("affiliate_events").countDocuments({
-        affiliateId: oid,
-        type: "lead",
-      }),
-      db.collection("affiliate_events").countDocuments({
-        affiliateId: oid,
-        type: "voucher",
-      }),
-      db.collection("affiliate_events").countDocuments({
-        affiliateId: oid,
-        type: "whatsapp_click",
-      }),
-      db
-        .collection<AffiliateEventDoc>("affiliate_events")
-        .find({ affiliateId: oid, type: "voucher" })
-        .toArray(),
-    ]);
+  const [visits, leads, vouchers, whatsappClicks, paidDocs] = await Promise.all([
+    db.collection("affiliate_events").countDocuments({ affiliateId: oid, type: "visit" }),
+    db.collection("affiliate_events").countDocuments({ affiliateId: oid, type: "lead" }),
+    db.collection("affiliate_events").countDocuments({ affiliateId: oid, type: "voucher" }),
+    db.collection("affiliate_events").countDocuments({ affiliateId: oid, type: "whatsapp_click" }),
+    // Commission basis: confirmed paid orders only (vouchers + direct bookings).
+    db
+      .collection<VoucherDoc>("vouchers")
+      .find({ affiliateCode: affiliate.code, paymentStatus: "paid" })
+      .toArray(),
+  ]);
 
-  const voucherPackages = voucherDocs
-    .map((e) => e.metadata?.package as VoucherPackage | undefined)
-    .filter((p): p is VoucherPackage => !!p);
+  const paidOrders = paidDocs.map((doc) => ({
+    amount: orderAmount(doc),
+    month: monthKey(doc.paidAt ?? doc.createdAt),
+  }));
 
-  const estimatedEarnings = estimateEarnings(
-    affiliate,
-    { leads, vouchers },
-    voucherPackages
-  );
+  const referredRevenue = paidOrders.reduce((sum, o) => sum + o.amount, 0);
+  const estimatedEarnings = estimateEarnings(affiliate, paidOrders);
 
   return {
     visits,
     leads,
     vouchers,
     whatsappClicks,
+    paidOrders: paidOrders.length,
+    referredRevenue,
     estimatedEarnings,
     pendingBalance: Math.max(0, estimatedEarnings - affiliate.totalPaid),
   };
