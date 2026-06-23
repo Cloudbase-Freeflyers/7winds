@@ -20,7 +20,7 @@ export async function GET() {
     );
   }
 
-  const state = createOAuthState();
+  const state = createOAuthState("gmail");
   const url = buildGoogleAuthUrl(state);
   return NextResponse.redirect(url);
 }

@@ -28,9 +28,17 @@ function oauthStateSecret(): string {
   );
 }
 
-export function createOAuthState(): string {
+export function createOAuthState(
+  purpose: "gmail" | "admin" = "gmail",
+  next?: string
+): string {
   const payload = Buffer.from(
-    JSON.stringify({ ts: Date.now(), n: crypto.randomBytes(8).toString("hex") })
+    JSON.stringify({
+      ts: Date.now(),
+      n: crypto.randomBytes(8).toString("hex"),
+      purpose,
+      ...(purpose === "admin" && next ? { next } : {}),
+    })
   ).toString("base64url");
   const sig = crypto
     .createHmac("sha256", oauthStateSecret())
@@ -39,25 +47,34 @@ export function createOAuthState(): string {
   return `${payload}.${sig}`;
 }
 
-export function verifyOAuthState(state: string): boolean {
+export function verifyOAuthState(
+  state: string,
+  purpose: "gmail" | "admin" = "gmail"
+): { valid: boolean; next?: string } {
   const [payload, sig] = state.split(".");
-  if (!payload || !sig) return false;
+  if (!payload || !sig) return { valid: false };
   const expected = crypto
     .createHmac("sha256", oauthStateSecret())
     .update(payload)
     .digest("base64url");
-  if (sig.length !== expected.length) return false;
+  if (sig.length !== expected.length) return { valid: false };
   if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
-    return false;
+    return { valid: false };
   }
   try {
     const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8")) as {
       ts?: number;
+      purpose?: string;
+      next?: string;
     };
-    if (!data.ts || Date.now() - data.ts > 15 * 60 * 1000) return false;
-    return true;
+    if (!data.ts || Date.now() - data.ts > 15 * 60 * 1000) return { valid: false };
+    if (data.purpose !== purpose) return { valid: false };
+    return {
+      valid: true,
+      ...(data.next && data.next.startsWith("/admin") ? { next: data.next } : {}),
+    };
   } catch {
-    return false;
+    return { valid: false };
   }
 }
 

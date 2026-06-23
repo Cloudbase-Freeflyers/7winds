@@ -26,7 +26,7 @@ export async function GET(req: Request) {
     return NextResponse.redirect(resultUrl({ error }));
   }
 
-  if (!code || !state || !verifyOAuthState(state)) {
+  if (!code || !state || !verifyOAuthState(state, "gmail").valid) {
     return NextResponse.redirect(resultUrl({ error: "invalid_oauth" }));
   }
 

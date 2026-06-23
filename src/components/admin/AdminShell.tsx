@@ -27,6 +27,11 @@ export default function AdminShell({
             </span>
           </a>
           <AdminNav active={active} />
+          <form action="/api/admin/auth/logout" method="POST">
+            <button type="submit" className="text-xs font-bold text-brand-dark hover:text-brand-black">
+              יציאה
+            </button>
+          </form>
         </div>
       </div>
 

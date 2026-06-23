@@ -129,7 +129,7 @@ export default function NotificationManager() {
           התראות על <strong>לידים בלבד</strong>.
         </p>
         <p className="mt-2 text-xs text-brand-dark/80">
-          בכניסה לניהול: שם משתמש — כל דבר · סיסמה — <code>ADMIN_PASSWORD</code> מהשרת.
+          התחברות לניהול: Google OAuth או סיסמה ב־<a href="/admin/login" className="underline">/admin/login</a>.
         </p>
 
         {notice && (

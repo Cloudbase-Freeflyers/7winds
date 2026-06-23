@@ -13,7 +13,8 @@ export default function NotificationSubscribePage() {
     setState("submitting");
     setMessage(null);
 
-    const fd = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const fd = new FormData(form);
     const payload = {
       name: String(fd.get("name") || "").trim(),
       email: String(fd.get("email") || "").trim(),
@@ -27,9 +28,9 @@ export default function NotificationSubscribePage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "שליחה נכשלה");
+      form.reset();
       setMessage(data.message || "הבקשה נשלחה.");
       setState("success");
-      e.currentTarget.reset();
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "שגיאה");
       setState("error");
