@@ -30,7 +30,8 @@ export default async function GmailConnectedPage({
               </p>
             )}
             <p className="mt-3 text-sm text-brand-dark">
-              התראות על לידים יישלחו מחשבון זה.
+              חשבון זה ישלח את כל ההתראות (לידים, שוברים, תשלומים). אין צורך בחיבור
+              נפרד לכל סוג.
             </p>
             <Link href="/admin/notifications" className="btn-primary btn-md mt-6 inline-block">
               חזרה להגדרות התראות

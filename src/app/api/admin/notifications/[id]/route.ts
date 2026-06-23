@@ -24,13 +24,13 @@ export async function PATCH(req: Request, { params }: Params) {
   const parsed = notificationSubscriberUpdateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
-      { ok: false, error: "סטטוס לא תקין" },
+      { ok: false, error: "עדכון לא תקין" },
       { status: 400 }
     );
   }
 
   try {
-    const result = await updateNotificationSubscriber(id, parsed.data.status);
+    const result = await updateNotificationSubscriber(id, parsed.data);
     if (!result) {
       return NextResponse.json({ ok: false, error: "לא נמצא" }, { status: 404 });
     }
@@ -42,6 +42,7 @@ export async function PATCH(req: Request, { params }: Params) {
         email: result.email,
         name: result.name,
         status: result.status,
+        preferences: result.preferences,
         approvedAt: result.approvedAt?.toISOString(),
       },
     });

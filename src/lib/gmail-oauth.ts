@@ -78,7 +78,10 @@ export function verifyOAuthState(
   }
 }
 
-export function buildGoogleAuthUrl(state: string): string {
+export function buildGoogleAuthUrl(
+  state: string,
+  options?: { forceConsent?: boolean }
+): string {
   const creds = getGoogleOAuthCredentials();
   if (!creds) throw new Error("Google OAuth is not configured");
 
@@ -87,10 +90,17 @@ export function buildGoogleAuthUrl(state: string): string {
     redirect_uri: getOAuthRedirectUri(),
     response_type: "code",
     access_type: "offline",
-    prompt: "consent",
+    include_granted_scopes: "true",
     scope: [GMAIL_SEND_SCOPE, EMAIL_SCOPE].join(" "),
     state,
   });
+
+  // Only force the full consent screen on first connect — reconnects reuse grants.
+  if (options?.forceConsent) {
+    params.set("prompt", "consent");
+  } else {
+    params.set("prompt", "select_account");
+  }
 
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
@@ -120,7 +130,7 @@ export async function exchangeCodeForTokens(code: string) {
     error_description?: string;
   };
 
-  if (!res.ok || !data.refresh_token) {
+  if (!res.ok || !data.access_token) {
     throw new Error(data.error_description || data.error || "Token exchange failed");
   }
 

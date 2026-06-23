@@ -2,12 +2,18 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import {
+  NOTIFICATION_TOPICS,
+  requestedTopicLabels,
+  type NotificationPreferences,
+} from "@/types/notifications";
 
 type SubscriberRow = {
   _id: string;
   email: string;
   name?: string;
   status: "pending" | "approved" | "rejected";
+  preferences: NotificationPreferences;
   createdAt: string;
   approvedAt?: string;
 };
@@ -98,6 +104,34 @@ export default function NotificationManager() {
     }
   }
 
+  async function togglePreference(
+    id: string,
+    topic: keyof NotificationPreferences,
+    enabled: boolean
+  ) {
+    setSaving(`${id}-${topic}`);
+    try {
+      const res = await fetch(`/api/admin/notifications/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preferences: { [topic]: enabled } }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "עדכון נכשל");
+      if (data.row) {
+        setRows((prev) =>
+          prev.map((r) => (r._id === id ? { ...r, preferences: data.row.preferences } : r))
+        );
+      } else {
+        await load();
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "שגיאה");
+    } finally {
+      setSaving(null);
+    }
+  }
+
   async function remove(id: string) {
     if (!confirm("למחוק את המנוי?")) return;
     setSaving(id);
@@ -125,8 +159,8 @@ export default function NotificationManager() {
       <section className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-5">
         <h2 className="font-display text-xl font-extrabold">חיבור Gmail לשליחה</h2>
         <p className="mt-1 text-sm text-brand-dark">
-          כל אתר שולח התראות מ<strong>חשבון Gmail של הבעלים</strong> — לא מחשבון המפתח.
-          התראות על <strong>לידים בלבד</strong>.
+          חיבור Gmail <strong>פעם אחת</strong> לכל סוגי ההתראות — אחר כך מפעילים/מכבים
+          לידים, שוברים ותשלומים בטבלה למטה (בלי Google נוסף).
         </p>
         <p className="mt-2 text-xs text-brand-dark/80">
           התחברות לניהול: Google OAuth או סיסמה ב־<a href="/admin/login" className="underline">/admin/login</a>.
@@ -169,7 +203,14 @@ export default function NotificationManager() {
 
             <div className="flex flex-wrap gap-3 pt-2">
               {config.oauthReady ? (
-                <a href="/api/admin/email/connect" className="btn-primary btn-sm">
+                <a
+                  href={
+                    config.connectedSenderEmail
+                      ? "/api/admin/email/connect?reconnect=1"
+                      : "/api/admin/email/connect"
+                  }
+                  className="btn-primary btn-sm"
+                >
                   {config.connectedSenderEmail ? "חיבור מחדש" : "חבר Gmail שלי"}
                 </a>
               ) : (
@@ -206,7 +247,8 @@ export default function NotificationManager() {
           <div>
             <h2 className="font-display text-xl font-extrabold">מנויי התראות</h2>
             <p className="mt-1 text-sm text-brand-dark">
-              מי מקבל את המיילים (דורש אישור מנהל). בקשות מ:{" "}
+              אישור <strong>פעם אחת לכל אימייל</strong> — אחר כך מפעילים/מכבים סוגי התראות.
+              בקשות מ:{" "}
               <a
                 href={subscribePageUrl}
                 target="_blank"
@@ -254,6 +296,7 @@ export default function NotificationManager() {
                   <th className="px-3 py-3 text-start text-xs font-bold">שם</th>
                   <th className="px-3 py-3 text-start text-xs font-bold">אימייל</th>
                   <th className="px-3 py-3 text-start text-xs font-bold">סטטוס</th>
+                  <th className="px-3 py-3 text-start text-xs font-bold">התראות</th>
                   <th className="px-3 py-3 text-start text-xs font-bold">תאריך</th>
                   <th className="px-3 py-3 text-start text-xs font-bold">פעולות</th>
                 </tr>
@@ -267,6 +310,21 @@ export default function NotificationManager() {
                     </td>
                     <td className="px-3 py-3">
                       <StatusBadge status={row.status} />
+                    </td>
+                    <td className="px-3 py-3">
+                      {row.status === "approved" ? (
+                        <PreferenceToggles
+                          preferences={row.preferences}
+                          disabled={saving?.startsWith(row._id) ?? false}
+                          onToggle={(topic, enabled) =>
+                            togglePreference(row._id, topic, enabled)
+                          }
+                        />
+                      ) : (
+                        <span className="text-xs text-brand-dark">
+                          {requestedTopicLabels(row.preferences) || "—"}
+                        </span>
+                      )}
                     </td>
                     <td className="px-3 py-3 text-xs text-brand-dark" dir="ltr">
                       {new Date(row.createdAt).toLocaleDateString("he-IL")}
@@ -310,6 +368,42 @@ export default function NotificationManager() {
           </div>
         )}
       </section>
+    </div>
+  );
+}
+
+function PreferenceToggles({
+  preferences,
+  disabled,
+  onToggle,
+}: {
+  preferences: NotificationPreferences;
+  disabled: boolean;
+  onToggle: (topic: keyof NotificationPreferences, enabled: boolean) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      {NOTIFICATION_TOPICS.map((topic) => (
+        <label
+          key={topic.id}
+          className={`flex items-center gap-2 text-xs ${
+            topic.active ? "text-brand-black" : "text-brand-dark/60"
+          }`}
+          title={topic.description}
+        >
+          <input
+            type="checkbox"
+            checked={preferences[topic.id]}
+            disabled={disabled || !topic.active}
+            onChange={(e) => onToggle(topic.id, e.target.checked)}
+            className="rounded border-black/20"
+          />
+          <span>
+            {topic.label}
+            {!topic.active && " (בקרוב)"}
+          </span>
+        </label>
+      ))}
     </div>
   );
 }

@@ -1,7 +1,12 @@
 import { getDb } from "@/lib/mongodb";
-import type {
-  NotificationSubscriberDoc,
-  NotificationSubscriberStatus,
+import {
+  defaultNotificationPreferences,
+  mergePreferences,
+  normalizePreferences,
+  type NotificationPreferences,
+  type NotificationSubscriberDoc,
+  type NotificationSubscriberStatus,
+  type NotificationTopic,
 } from "@/types/notifications";
 
 let indexesReady: Promise<void> | null = null;
@@ -10,15 +15,78 @@ function ensureIndexes() {
   if (!indexesReady) {
     indexesReady = (async () => {
       const db = await getDb();
-      await db
-        .collection<NotificationSubscriberDoc>("notification_subscribers")
-        .createIndex({ email: 1 }, { unique: true });
-      await db
-        .collection<NotificationSubscriberDoc>("notification_subscribers")
-        .createIndex({ status: 1, createdAt: -1 });
+      const coll = db.collection<NotificationSubscriberDoc>("notification_subscribers");
+      await mergeDuplicateSubscribers(coll);
+      await coll.createIndex({ email: 1 }, { unique: true });
+      await coll.createIndex({ status: 1, createdAt: -1 });
     })();
   }
   return indexesReady;
+}
+
+const STATUS_RANK: Record<NotificationSubscriberStatus, number> = {
+  approved: 3,
+  pending: 2,
+  rejected: 1,
+};
+
+async function mergeDuplicateSubscribers(
+  coll: import("mongodb").Collection<NotificationSubscriberDoc>
+) {
+  const dupes = await coll
+    .aggregate<{ _id: string; count: number }>([
+      { $group: { _id: "$email", count: { $sum: 1 } } },
+      { $match: { count: { $gt: 1 } } },
+    ])
+    .toArray();
+
+  for (const { _id: email } of dupes) {
+    const rows = await coll.find({ email }).sort({ createdAt: 1 }).toArray();
+    if (rows.length < 2) continue;
+
+    const bestStatus = rows.reduce((best, row) =>
+      STATUS_RANK[row.status] > STATUS_RANK[best.status] ? row : best
+    ).status;
+
+    const preferences = rows.reduce(
+      (acc, row) =>
+        mergePreferences(acc, normalizePreferences(row.preferences)),
+      defaultNotificationPreferences()
+    );
+
+    const primary = rows.find((r) => r.status === bestStatus) ?? rows[0];
+    const approvedAt = rows.find((r) => r.approvedAt)?.approvedAt;
+
+    await coll.updateOne(
+      { _id: primary._id },
+      {
+        $set: {
+          status: bestStatus,
+          preferences,
+          name: primary.name || rows.find((r) => r.name)?.name,
+          ...(bestStatus === "approved"
+            ? { approvedAt: approvedAt ?? new Date() }
+            : {}),
+          updatedAt: new Date(),
+        },
+        ...(bestStatus !== "approved" ? { $unset: { approvedAt: "" } } : {}),
+      }
+    );
+
+    const removeIds = rows
+      .filter((r) => String(r._id) !== String(primary._id))
+      .map((r) => r._id!);
+    if (removeIds.length) {
+      await coll.deleteMany({ _id: { $in: removeIds } });
+    }
+  }
+}
+
+function docWithDefaults(doc: NotificationSubscriberDoc): NotificationSubscriberDoc {
+  return {
+    ...doc,
+    preferences: normalizePreferences(doc.preferences),
+  };
 }
 
 export async function listNotificationSubscribers(
@@ -27,84 +95,164 @@ export async function listNotificationSubscribers(
   await ensureIndexes();
   const db = await getDb();
   const filter = status ? { status } : {};
-  return db
+  const rows = await db
     .collection<NotificationSubscriberDoc>("notification_subscribers")
     .find(filter)
     .sort({ createdAt: -1 })
     .toArray();
+  return rows.map(docWithDefaults);
 }
 
-export async function getApprovedNotificationEmails(): Promise<string[]> {
+export async function getApprovedEmailsForTopic(
+  topic: NotificationTopic
+): Promise<string[]> {
   await ensureIndexes();
   const db = await getDb();
   const rows = await db
     .collection<NotificationSubscriberDoc>("notification_subscribers")
-    .find({ status: "approved" })
+    .find({
+      status: "approved",
+      [`preferences.${topic}`]: true,
+    })
     .project({ email: 1 })
     .toArray();
   return rows.map((r) => r.email);
 }
 
+/** @deprecated use getApprovedEmailsForTopic */
+export async function getApprovedNotificationEmails(): Promise<string[]> {
+  return getApprovedEmailsForTopic("leads");
+}
+
 export async function requestNotificationSubscription(params: {
   email: string;
   name?: string;
+  preferences?: Partial<NotificationPreferences>;
 }) {
   await ensureIndexes();
   const db = await getDb();
   const email = params.email.trim().toLowerCase();
+  const requested = normalizePreferences(
+    mergePreferences(defaultNotificationPreferences(), params.preferences ?? {})
+  );
+
   const existing = await db
     .collection<NotificationSubscriberDoc>("notification_subscribers")
     .findOne({ email });
 
+  const now = new Date();
+
   if (existing?.status === "approved") {
-    return { ok: true as const, status: "approved" as const };
-  }
-  if (existing?.status === "pending") {
-    return { ok: true as const, status: "pending" as const };
+    const preferences = mergePreferences(
+      normalizePreferences(existing.preferences),
+      requested
+    );
+    await db.collection<NotificationSubscriberDoc>("notification_subscribers").updateOne(
+      { email },
+      {
+        $set: {
+          name: params.name || existing.name,
+          preferences,
+          updatedAt: now,
+        },
+      }
+    );
+    return {
+      ok: true as const,
+      status: "approved" as const,
+      message: "העדפות ההתראות עודכנו.",
+    };
   }
 
-  const now = new Date();
+  if (existing?.status === "pending") {
+    const preferences = mergePreferences(
+      normalizePreferences(existing.preferences),
+      requested
+    );
+    await db.collection<NotificationSubscriberDoc>("notification_subscribers").updateOne(
+      { email },
+      {
+        $set: {
+          name: params.name || existing.name,
+          preferences,
+          updatedAt: now,
+        },
+      }
+    );
+    return {
+      ok: true as const,
+      status: "pending" as const,
+      message: "הבקשה כבר ממתינה — העדפות ההתראות עודכנו.",
+    };
+  }
+
   if (existing?.status === "rejected") {
     await db.collection<NotificationSubscriberDoc>("notification_subscribers").updateOne(
       { email },
       {
         $set: {
           name: params.name || existing.name,
+          preferences: requested,
           status: "pending",
           updatedAt: now,
         },
         $unset: { approvedAt: "" },
       }
     );
-    return { ok: true as const, status: "pending" as const, reRequested: true };
+    return {
+      ok: true as const,
+      status: "pending" as const,
+      message: "הבקשה נשלחה מחדש — ממתין לאישור מנהל.",
+    };
   }
 
   await db.collection<NotificationSubscriberDoc>("notification_subscribers").insertOne({
     email,
     name: params.name,
     status: "pending",
+    preferences: requested,
     createdAt: now,
   });
 
-  return { ok: true as const, status: "pending" as const };
+  return {
+    ok: true as const,
+    status: "pending" as const,
+    message: "הבקשה נשלחה — ממתין לאישור מנהל (פעם אחת לכל אימייל).",
+  };
 }
 
 export async function updateNotificationSubscriber(
   id: string,
-  status: NotificationSubscriberStatus
+  updates: {
+    status?: NotificationSubscriberStatus;
+    preferences?: Partial<NotificationPreferences>;
+  }
 ) {
   await ensureIndexes();
   const db = await getDb();
   const { ObjectId } = await import("mongodb");
   if (!ObjectId.isValid(id)) return null;
 
+  const existing = await db
+    .collection<NotificationSubscriberDoc>("notification_subscribers")
+    .findOne({ _id: new ObjectId(id) });
+  if (!existing) return null;
+
   const now = new Date();
-  const updates: Partial<NotificationSubscriberDoc> = {
-    status,
-    updatedAt: now,
-  };
-  if (status === "approved") {
-    updates.approvedAt = now;
+  const set: Partial<NotificationSubscriberDoc> = { updatedAt: now };
+
+  if (updates.status) {
+    set.status = updates.status;
+    if (updates.status === "approved") {
+      set.approvedAt = now;
+    }
+  }
+
+  if (updates.preferences) {
+    set.preferences = mergePreferences(
+      normalizePreferences(existing.preferences),
+      updates.preferences
+    );
   }
 
   const result = await db
@@ -112,13 +260,15 @@ export async function updateNotificationSubscriber(
     .findOneAndUpdate(
       { _id: new ObjectId(id) },
       {
-        $set: updates,
-        ...(status !== "approved" ? { $unset: { approvedAt: "" } } : {}),
+        $set: set,
+        ...(updates.status && updates.status !== "approved"
+          ? { $unset: { approvedAt: "" } }
+          : {}),
       },
       { returnDocument: "after" }
     );
 
-  return result;
+  return result ? docWithDefaults(result) : null;
 }
 
 export async function deleteNotificationSubscriber(id: string) {

@@ -1,7 +1,7 @@
 import { BRAND, PACKAGE_LABELS } from "@/lib/constants";
 import { getConnectedEmailSender } from "@/lib/email-sender";
 import { getGoogleOAuthCredentials } from "@/lib/gmail-oauth";
-import { getApprovedNotificationEmails } from "@/lib/notification-subscribers";
+import { getApprovedEmailsForTopic } from "@/lib/notification-subscribers";
 import type { LeadDoc } from "@/types/submissions";
 
 function getSystemNotifyEmail(): string | null {
@@ -54,7 +54,7 @@ export async function getEmailConfigSummary() {
 async function getLeadNotificationRecipients(
   senderEmail?: string | null
 ): Promise<string[]> {
-  const approved = await getApprovedNotificationEmails();
+  const approved = await getApprovedEmailsForTopic("leads");
   const system = getSystemNotifyEmail();
   const emails = new Set<string>();
   if (system) emails.add(system.toLowerCase());

@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { clearConnectedEmailSender } from "@/lib/email-sender";
+import {
+  clearConnectedEmailSender,
+  getConnectedEmailSender,
+} from "@/lib/email-sender";
 import {
   buildGoogleAuthUrl,
   createOAuthState,
@@ -8,7 +11,7 @@ import {
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(req: Request) {
   if (!isGoogleOAuthConfigured()) {
     return NextResponse.json(
       {
@@ -20,8 +23,11 @@ export async function GET() {
     );
   }
 
+  const { searchParams } = new URL(req.url);
+  const existing = await getConnectedEmailSender();
+  const forceConsent = searchParams.get("reconnect") === "1" || !existing;
   const state = createOAuthState("gmail");
-  const url = buildGoogleAuthUrl(state);
+  const url = buildGoogleAuthUrl(state, { forceConsent });
   return NextResponse.redirect(url);
 }
 

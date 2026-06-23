@@ -169,11 +169,23 @@ export const adminVoucherUpdateSchema = z.object({
     .optional(),
 });
 
+const notificationPreferencesSchema = z.object({
+  leads: z.boolean().optional(),
+  vouchers: z.boolean().optional(),
+  payments: z.boolean().optional(),
+});
+
 export const notificationSubscribeSchema = z.object({
   email: emailSchema,
   name: z.string().trim().min(2, "נא להזין שם").max(80).optional().or(z.literal("")),
+  preferences: notificationPreferencesSchema.optional(),
 });
 
-export const notificationSubscriberUpdateSchema = z.object({
-  status: z.enum(["pending", "approved", "rejected"]),
-});
+export const notificationSubscriberUpdateSchema = z
+  .object({
+    status: z.enum(["pending", "approved", "rejected"]).optional(),
+    preferences: notificationPreferencesSchema.optional(),
+  })
+  .refine((data) => data.status !== undefined || data.preferences !== undefined, {
+    message: "Nothing to update",
+  });

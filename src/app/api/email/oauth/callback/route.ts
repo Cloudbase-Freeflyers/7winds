@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { saveConnectedEmailSender } from "@/lib/email-sender";
+import {
+  getConnectedEmailSender,
+  saveConnectedEmailSender,
+} from "@/lib/email-sender";
 import {
   exchangeCodeForTokens,
   fetchGoogleEmail,
@@ -10,10 +13,13 @@ import { BRAND } from "@/lib/constants";
 
 export const runtime = "nodejs";
 
+function siteBase() {
+  return (process.env.NEXT_PUBLIC_SITE_URL || BRAND.url).replace(/\/$/, "");
+}
+
 function resultUrl(params: Record<string, string>) {
-  const base = `${BRAND.url.replace(/\/$/, "")}/gmail-connected`;
   const qs = new URLSearchParams(params);
-  return `${base}?${qs.toString()}`;
+  return `${siteBase()}/gmail-connected?${qs.toString()}`;
 }
 
 export async function GET(req: Request) {
@@ -37,9 +43,21 @@ export async function GET(req: Request) {
   try {
     const tokens = await exchangeCodeForTokens(code);
     const email = await fetchGoogleEmail(tokens.access_token!);
+    const existing = await getConnectedEmailSender();
+    const refreshToken = tokens.refresh_token ?? existing?.refreshToken;
+
+    if (!refreshToken) {
+      return NextResponse.redirect(
+        resultUrl({
+          error:
+            "google_no_refresh_token — נסו 'חיבור מחדש' או בטלו גישה לאפליקציה בחשבון Google",
+        })
+      );
+    }
+
     await saveConnectedEmailSender({
       senderEmail: email,
-      refreshToken: tokens.refresh_token!,
+      refreshToken,
     });
     return NextResponse.redirect(resultUrl({ connected: "1", email }));
   } catch (err) {

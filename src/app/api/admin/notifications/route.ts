@@ -33,6 +33,7 @@ export async function GET(req: Request) {
       email: s.email,
       name: s.name,
       status: s.status,
+      preferences: s.preferences,
       createdAt:
         s.createdAt instanceof Date
           ? s.createdAt.toISOString()

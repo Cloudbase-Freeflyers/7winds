@@ -17,7 +17,7 @@ export default async function AdminNotificationsPage() {
     <AdminShell
       active="notifications"
       title="התראות אימייל"
-      subtitle="חברו Gmail שלכם, אשרו מנויים, והתראות על לידים."
+      subtitle="חיבור Gmail פעם אחת, אישור מנויים פעם אחת, ואז שליטה בסוגי ההתראות."
     >
       <Suspense fallback={<p className="text-sm text-brand-dark">טוען…</p>}>
         <NotificationManager />

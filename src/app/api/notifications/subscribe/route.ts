@@ -25,15 +25,13 @@ export async function POST(req: Request) {
     const result = await requestNotificationSubscription({
       email: parsed.data.email,
       name: parsed.data.name || undefined,
+      preferences: parsed.data.preferences,
     });
 
     return NextResponse.json({
       ok: true,
       status: result.status,
-      message:
-        result.status === "approved"
-          ? "כבר מאושרים לקבלת התראות על לידים."
-          : "הבקשה נשלחה — ממתין לאישור מנהל.",
+      message: result.message,
     });
   } catch (err) {
     console.error("[notifications/subscribe]", err);
