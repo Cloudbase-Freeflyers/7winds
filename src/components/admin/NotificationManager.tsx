@@ -128,6 +128,9 @@ export default function NotificationManager() {
           כל אתר שולח התראות מ<strong>חשבון Gmail של הבעלים</strong> — לא מחשבון המפתח.
           התראות על <strong>לידים בלבד</strong>.
         </p>
+        <p className="mt-2 text-xs text-brand-dark/80">
+          בכניסה לניהול: שם משתמש — כל דבר · סיסמה — <code>ADMIN_PASSWORD</code> מהשרת.
+        </p>
 
         {notice && (
           <div className="mt-4 rounded-xl bg-green-50 border border-green-200 p-3 text-green-900 text-sm">
