@@ -1,7 +1,7 @@
 /** Ensure a site URL always has a scheme; force https off localhost. */
 export function normalizeSiteUrl(raw: string): string {
   let url = raw.trim().replace(/\/$/, "");
-  if (!url) url = "https://7windsparagliding.com";
+  if (!url) url = "https://lp.7windsparagliding.co.il";
   if (!/^https?:\/\//i.test(url)) {
     url = `https://${url}`;
   }
@@ -41,8 +41,30 @@ function originFromHost(
 /** Canonical site URL from env (may differ from the host the user is browsing). */
 export function getConfiguredSiteUrl(): string {
   const raw =
-    process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://7windsparagliding.com";
+    process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+    "https://lp.7windsparagliding.co.il";
   return normalizeSiteUrl(raw);
+}
+
+function isLocalOrigin(origin: string): boolean {
+  try {
+    const { hostname } = new URL(origin);
+    return hostname === "localhost" || hostname === "127.0.0.1";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * OAuth redirect_uri base — localhost from the request, production from env.
+ * Avoids redirect_uri_mismatch when admin is opened on the apex domain.
+ */
+export function getOAuthSiteOrigin(req?: Request): string {
+  if (req) {
+    const origin = getRequestOrigin(req);
+    if (isLocalOrigin(origin)) return origin;
+  }
+  return getConfiguredSiteUrl();
 }
 
 /**
