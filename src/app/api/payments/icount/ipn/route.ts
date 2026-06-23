@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { recordAffiliateEvent, resolveAffiliate } from "@/lib/affiliates";
+import { notifyAsync, notifyVoucherPaid } from "@/lib/email";
 import { parseIpnPayload } from "@/lib/icount";
 import { getDb } from "@/lib/mongodb";
 import type { VoucherDoc } from "@/types/submissions";
@@ -80,6 +81,16 @@ export async function POST(req: Request) {
         });
       }
     }
+
+    notifyAsync(() =>
+      notifyVoucherPaid({
+        ...existing,
+        paymentStatus: "paid",
+        paidAt: new Date(),
+        ...(confirmationCode ? { icountConfirmationCode: confirmationCode } : {}),
+        ...(docNum && !Number.isNaN(docNum) ? { icountDocNum: docNum } : {}),
+      })
+    );
 
     return NextResponse.json({ ok: true });
   } catch (err) {

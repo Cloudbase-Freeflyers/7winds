@@ -3,7 +3,8 @@ import { getConnectedEmailSender } from "@/lib/email-sender";
 import { getGoogleOAuthCredentials } from "@/lib/gmail-oauth";
 import { getConfiguredSiteUrl } from "@/lib/site-url";
 import { getApprovedEmailsForTopic } from "@/lib/notification-subscribers";
-import type { LeadDoc } from "@/types/submissions";
+import type { NotificationTopic } from "@/types/notifications";
+import type { LeadDoc, VoucherDoc } from "@/types/submissions";
 
 function getSystemNotifyEmail(): string | null {
   return process.env.NOTIFY_EMAIL?.trim() || null;
@@ -52,10 +53,11 @@ export async function getEmailConfigSummary() {
   };
 }
 
-async function getLeadNotificationRecipients(
+async function getTopicRecipients(
+  topic: NotificationTopic,
   senderEmail?: string | null
 ): Promise<string[]> {
-  const approved = await getApprovedEmailsForTopic("leads");
+  const approved = await getApprovedEmailsForTopic(topic);
   const system = getSystemNotifyEmail();
   const emails = new Set<string>();
   if (system) emails.add(system.toLowerCase());
@@ -165,35 +167,22 @@ export function notifyAsync(fn: () => Promise<void>): void {
   fn().catch((err) => console.error("[email]", err));
 }
 
-/** Lead alerts only — sent from the connected Gmail account. */
-export async function notifyNewLead(lead: LeadDoc): Promise<void> {
+/**
+ * Resolve recipients for a topic and send one alert to each, via the connected
+ * Gmail account (preferred) or Apps Script. No-op when email isn't configured
+ * or no one is subscribed to the topic.
+ */
+async function notifyTopic(
+  topic: NotificationTopic,
+  build: (sender: { senderEmail: string } | null) => { subject: string; text: string }
+): Promise<void> {
   if (!(await isEmailConfigured())) return;
 
   const connected = await getConnectedEmailSender();
-  const recipients = await getLeadNotificationRecipients(connected?.senderEmail);
+  const recipients = await getTopicRecipients(topic, connected?.senderEmail);
   if (recipients.length === 0) return;
 
-  const sourceLabel =
-    lead.source === "accessibility" ? "נגישות" : "טופס יצירת קשר";
-  const affiliateLine = lead.affiliateCode
-    ? `\nשותף / מודעה: ${lead.affiliateCode}`
-    : "";
-
-  const text = [
-    "פנייה חדשה באתר 7Winds",
-    "",
-    `שם: ${lead.name}`,
-    `טלפון: ${lead.phone}`,
-    lead.message ? `הודעה: ${lead.message}` : null,
-    `מקור: ${sourceLabel}`,
-    affiliateLine || null,
-    "",
-    `ניהול: ${adminUrl("/admin/leads")}`,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  const subject = `[7Winds] פנייה חדשה — ${lead.name}`;
+  const { subject, text } = build(connected);
   const html = simpleHtml(text);
 
   for (const to of recipients) {
@@ -203,4 +192,85 @@ export async function notifyNewLead(lead: LeadDoc): Promise<void> {
       await sendViaAppsScript({ to, subject, text, html });
     }
   }
+}
+
+/** Lead alerts — sent from the connected Gmail account. */
+export async function notifyNewLead(lead: LeadDoc): Promise<void> {
+  await notifyTopic("leads", () => {
+    const sourceLabel =
+      lead.source === "accessibility" ? "נגישות" : "טופס יצירת קשר";
+    const affiliateLine = lead.affiliateCode
+      ? `\nשותף / מודעה: ${lead.affiliateCode}`
+      : "";
+
+    const text = [
+      "פנייה חדשה באתר 7Winds",
+      "",
+      `שם: ${lead.name}`,
+      `טלפון: ${lead.phone}`,
+      lead.message ? `הודעה: ${lead.message}` : null,
+      `מקור: ${sourceLabel}`,
+      affiliateLine || null,
+      "",
+      `ניהול: ${adminUrl("/admin/leads")}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    return { subject: `[7Winds] פנייה חדשה — ${lead.name}`, text };
+  });
+}
+
+/** New gift-voucher request — alerts subscribers opted into "vouchers". */
+export async function notifyNewVoucher(voucher: VoucherDoc): Promise<void> {
+  await notifyTopic("vouchers", () => {
+    const affiliateLine = voucher.affiliateCode
+      ? `\nשותף / מודעה: ${voucher.affiliateCode}`
+      : "";
+
+    const text = [
+      "בקשת שובר מתנה חדשה באתר 7Winds",
+      "",
+      `קונה: ${voucher.buyerName}`,
+      `טלפון: ${voucher.buyerPhone}`,
+      voucher.buyerEmail ? `אימייל: ${voucher.buyerEmail}` : null,
+      `חבילה: ${PACKAGE_LABELS[voucher.package] ?? voucher.package}`,
+      voucher.recipientName ? `מקבל/ת השובר: ${voucher.recipientName}` : null,
+      voucher.occasion ? `אירוע: ${voucher.occasion}` : null,
+      voucher.notes ? `הערות: ${voucher.notes}` : null,
+      affiliateLine || null,
+      "",
+      `ניהול: ${adminUrl("/admin/leads")}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    return { subject: `[7Winds] בקשת שובר חדשה — ${voucher.buyerName}`, text };
+  });
+}
+
+/** Confirmed payment — alerts subscribers opted into "payments". */
+export async function notifyVoucherPaid(voucher: VoucherDoc): Promise<void> {
+  await notifyTopic("payments", () => {
+    const amountLine =
+      typeof voucher.amount === "number" ? `סכום: ₪${voucher.amount}` : null;
+
+    const text = [
+      "תשלום אושר באתר 7Winds",
+      "",
+      `קונה: ${voucher.buyerName}`,
+      `טלפון: ${voucher.buyerPhone}`,
+      `חבילה: ${PACKAGE_LABELS[voucher.package] ?? voucher.package}`,
+      amountLine,
+      voucher.orderId ? `מספר הזמנה: ${voucher.orderId}` : null,
+      voucher.icountDocNum ? `חשבונית iCount: ${voucher.icountDocNum}` : null,
+      voucher.affiliateCode ? `שותף / מודעה: ${voucher.affiliateCode}` : null,
+      "",
+      `ניהול: ${adminUrl("/admin/leads")}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    return { subject: `[7Winds] תשלום אושר — ${voucher.buyerName}`, text };
+  });
 }

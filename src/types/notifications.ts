@@ -30,14 +30,14 @@ export const NOTIFICATION_TOPICS: {
   {
     id: "vouchers",
     label: "שוברים",
-    description: "בקשות שובר מתנה (בקרוב)",
-    active: false,
+    description: "בקשות שובר מתנה",
+    active: true,
   },
   {
     id: "payments",
     label: "תשלומים",
-    description: "אישורי תשלום (בקרוב)",
-    active: false,
+    description: "אישורי תשלום",
+    active: true,
   },
 ];
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { resolveAffiliate, recordAffiliateEvent } from "@/lib/affiliates";
+import { notifyAsync, notifyNewVoucher } from "@/lib/email";
 import { getDb } from "@/lib/mongodb";
 import { voucherSchema, normalizePhone } from "@/lib/validation";
 import type { VoucherDoc } from "@/types/submissions";
@@ -51,6 +52,8 @@ export async function POST(req: Request) {
         package: parsed.data.package,
       });
     }
+
+    notifyAsync(() => notifyNewVoucher({ ...doc, _id: result.insertedId }));
 
     return NextResponse.json({ ok: true, id: result.insertedId.toString() });
   } catch (err) {
