@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   }
 
   if (body.password !== expected) {
-    return NextResponse.json({ ok: false, error: "Wrong password" }, { status: 401 });
+    return NextResponse.json({ ok: false, error: "סיסמה שגויה" }, { status: 401 });
   }
 
   const next =

@@ -70,8 +70,11 @@ function LoginForm({
           </a>
         ) : (
           <div className="mt-6 rounded-xl bg-brand-yellow/20 border border-brand-yellow/40 p-3 text-sm text-brand-black">
-            <p className="font-bold">Google login not configured on server</p>
+            <p className="font-bold">התחברות Google לא מוגדרת בשרת</p>
             <p className="mt-1 text-xs">{oauthIssue}</p>
+            <p className="mt-2 text-xs">
+              הוסיפו ב-Vercel: <code dir="ltr">ADMIN_ALLOWED_EMAILS</code>
+            </p>
           </div>
         )}
 
@@ -82,8 +85,11 @@ function LoginForm({
         </div>
 
         <form onSubmit={onPasswordSubmit} className="space-y-3">
+          <p className="text-xs text-brand-dark">
+            אין שדה שם משתמש — רק סיסמת מנהל (<code dir="ltr">ADMIN_PASSWORD</code> בשרת).
+          </p>
           <label className="block text-sm font-bold" htmlFor="password">
-            סיסמת מנהל
+            סיסמת מנהל בלבד
           </label>
           <input
             id="password"
