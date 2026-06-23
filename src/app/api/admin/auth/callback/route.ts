@@ -8,7 +8,7 @@ import {
   isEmailAllowedForAdmin,
   verifyAdminOAuthState,
 } from "@/lib/admin-oauth";
-import { getRequestOrigin } from "@/lib/site-url";
+import { getSiteOrigin } from "@/lib/site-url";
 
 export const runtime = "nodejs";
 
@@ -23,7 +23,7 @@ export async function GET(req: Request) {
   const state = searchParams.get("state");
   const error = searchParams.get("error");
   const next = safeNextPath(searchParams.get("next"));
-  const origin = getRequestOrigin(req);
+  const origin = getSiteOrigin(req);
   const loginUrl = `${origin}/admin/login`;
 
   if (error) {

@@ -1,7 +1,7 @@
 /** Ensure a site URL always has a scheme; force https off localhost. */
 export function normalizeSiteUrl(raw: string): string {
   let url = raw.trim().replace(/\/$/, "");
-  if (!url) url = "https://7windsparagliding.co.il";
+  if (!url) url = "https://lp.7windsparagliding.co.il";
   if (!/^https?:\/\//i.test(url)) {
     url = `https://${url}`;
   }
@@ -38,12 +38,43 @@ function originFromHost(
   return `https://${host}`;
 }
 
-/** Canonical site URL from env (may differ from the host the user is browsing). */
+/** Canonical site URL from env — production uses the lp subdomain only. */
 export function getConfiguredSiteUrl(): string {
   const raw =
     process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
-    "https://7windsparagliding.co.il";
+    "https://lp.7windsparagliding.co.il";
   return normalizeSiteUrl(raw);
+}
+
+function isLocalOrigin(origin: string): boolean {
+  try {
+    const { hostname } = new URL(origin);
+    return hostname === "localhost" || hostname === "127.0.0.1";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Origin for OAuth callbacks and admin redirects.
+ * Localhost in dev; configured lp subdomain in production.
+ */
+export function getSiteOrigin(req?: Request): string {
+  if (req) {
+    const origin = getRequestOrigin(req);
+    if (isLocalOrigin(origin)) return origin;
+  }
+  return getConfiguredSiteUrl();
+}
+
+/** Same as getSiteOrigin but for Next.js middleware (NextRequest). */
+export function getSiteOriginFromNextRequest(req: {
+  headers: { get(name: string): string | null };
+  nextUrl: { host: string; protocol: string };
+}): string {
+  const origin = getRequestOriginFromNextRequest(req);
+  if (isLocalOrigin(origin)) return origin;
+  return getConfiguredSiteUrl();
 }
 
 /**
