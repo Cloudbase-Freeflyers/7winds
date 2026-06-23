@@ -8,7 +8,7 @@ import {
   isEmailAllowedForAdmin,
   verifyAdminOAuthState,
 } from "@/lib/admin-oauth";
-import { BRAND } from "@/lib/constants";
+import { getRequestOrigin } from "@/lib/site-url";
 
 export const runtime = "nodejs";
 
@@ -23,8 +23,8 @@ export async function GET(req: Request) {
   const state = searchParams.get("state");
   const error = searchParams.get("error");
   const next = safeNextPath(searchParams.get("next"));
-
-  const loginUrl = `${BRAND.url.replace(/\/$/, "")}/admin/login`;
+  const origin = getRequestOrigin(req);
+  const loginUrl = `${origin}/admin/login`;
 
   if (error) {
     return NextResponse.redirect(`${loginUrl}?error=${encodeURIComponent(error)}`);
@@ -42,13 +42,14 @@ export async function GET(req: Request) {
   const redirectNext = verified.next || next;
 
   try {
-    const email = await exchangeAdminAuthCode(code);
+    const redirectUri = `${origin}/api/admin/auth/callback`;
+    const email = await exchangeAdminAuthCode(code, redirectUri);
     if (!isEmailAllowedForAdmin(email)) {
       return NextResponse.redirect(`${loginUrl}?error=not_allowed`);
     }
 
     const token = await createAdminSessionToken(email);
-    const res = NextResponse.redirect(`${BRAND.url.replace(/\/$/, "")}${redirectNext}`);
+    const res = NextResponse.redirect(`${origin}${redirectNext}`);
     res.cookies.set("7winds_admin_session", token, adminSessionCookieOptions());
     return res;
   } catch (err) {

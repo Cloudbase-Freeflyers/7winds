@@ -1,4 +1,4 @@
-import { BRAND } from "@/lib/constants";
+import { getConfiguredSiteUrl } from "@/lib/site-url";
 import {
   createOAuthState,
   fetchGoogleEmail,
@@ -40,18 +40,18 @@ export function isEmailAllowedForAdmin(email: string): boolean {
   return allowed.includes(email.trim().toLowerCase());
 }
 
-export function getAdminAuthRedirectUri(): string {
-  const base = (process.env.NEXT_PUBLIC_SITE_URL || BRAND.url).replace(/\/$/, "");
+export function getAdminAuthRedirectUri(origin?: string): string {
+  const base = (origin || getConfiguredSiteUrl()).replace(/\/$/, "");
   return `${base}/api/admin/auth/callback`;
 }
 
-export function buildAdminLoginUrl(state: string): string {
+export function buildAdminLoginUrl(state: string, redirectUri?: string): string {
   const creds = getGoogleOAuthCredentials();
   if (!creds) throw new Error("Google OAuth is not configured");
 
   const params = new URLSearchParams({
     client_id: creds.clientId,
-    redirect_uri: getAdminAuthRedirectUri(),
+    redirect_uri: redirectUri || getAdminAuthRedirectUri(),
     response_type: "code",
     scope: ADMIN_SCOPES.join(" "),
     state,
@@ -69,7 +69,7 @@ export function verifyAdminOAuthState(state: string): { valid: boolean; next?: s
   return verifyOAuthState(state, "admin");
 }
 
-export async function exchangeAdminAuthCode(code: string) {
+export async function exchangeAdminAuthCode(code: string, redirectUri?: string) {
   const creds = getGoogleOAuthCredentials();
   if (!creds) throw new Error("Google OAuth is not configured");
 
@@ -77,7 +77,7 @@ export async function exchangeAdminAuthCode(code: string) {
     code,
     client_id: creds.clientId,
     client_secret: creds.clientSecret,
-    redirect_uri: getAdminAuthRedirectUri(),
+    redirect_uri: redirectUri || getAdminAuthRedirectUri(),
     grant_type: "authorization_code",
   });
 
