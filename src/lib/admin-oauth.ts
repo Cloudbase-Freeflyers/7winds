@@ -21,10 +21,18 @@ export function getAllowedAdminEmails(): string[] {
     .filter(Boolean);
 }
 
+export function getAdminOAuthConfigIssue(): string | null {
+  if (!getGoogleOAuthCredentials()) {
+    return "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set on the server.";
+  }
+  if (getAllowedAdminEmails().length === 0) {
+    return "ADMIN_ALLOWED_EMAILS must list at least one Google account (comma-separated).";
+  }
+  return null;
+}
+
 export function isAdminOAuthEnabled(): boolean {
-  return Boolean(
-    getGoogleOAuthCredentials() && getAllowedAdminEmails().length > 0
-  );
+  return getAdminOAuthConfigIssue() === null;
 }
 
 export function isEmailAllowedForAdmin(email: string): boolean {
