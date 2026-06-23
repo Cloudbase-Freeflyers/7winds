@@ -8,6 +8,7 @@ import {
   createOAuthState,
   isGoogleOAuthConfigured,
 } from "@/lib/gmail-oauth";
+import { getOAuthSiteOrigin } from "@/lib/site-url";
 
 export const runtime = "nodejs";
 
@@ -27,7 +28,10 @@ export async function GET(req: Request) {
   const existing = await getConnectedEmailSender();
   const forceConsent = searchParams.get("reconnect") === "1" || !existing;
   const state = createOAuthState("gmail");
-  const url = buildGoogleAuthUrl(state, { forceConsent });
+  const url = buildGoogleAuthUrl(state, {
+    forceConsent,
+    origin: getOAuthSiteOrigin(req),
+  });
   return NextResponse.redirect(url);
 }
 

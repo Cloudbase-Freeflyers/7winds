@@ -3,7 +3,7 @@
 
 GOOGLE_CLIENT_ID=61202666661-a9hbq7k2ogon88deijvnjlcm5s60gof8.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=<paste from Google Cloud — single GOCSPX- prefix>
-NEXT_PUBLIC_SITE_URL=https://lp.7windsparagliding.co.il
+NEXT_PUBLIC_SITE_URL=https://lp.7windsparagliding.com
 NOTIFY_EMAIL=<optional owner inbox>
 
 # Already on prod (verify these exist):

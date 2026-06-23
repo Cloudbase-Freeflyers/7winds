@@ -4,7 +4,7 @@ export const BRAND = {
   name: "7Winds Paragliding Club",
   hebrewName: "7Winds — מועדון מצנחי רחיפה",
   url: normalizeSiteUrl(
-    process.env.NEXT_PUBLIC_SITE_URL || "https://lp.7windsparagliding.co.il"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://lp.7windsparagliding.com"
   ),
   /** Header, footer, and in-page branding */
   logo: "/logo.png",

@@ -1,7 +1,7 @@
 /** Ensure a site URL always has a scheme; force https off localhost. */
 export function normalizeSiteUrl(raw: string): string {
   let url = raw.trim().replace(/\/$/, "");
-  if (!url) url = "https://lp.7windsparagliding.co.il";
+  if (!url) url = "https://lp.7windsparagliding.com";
   if (!/^https?:\/\//i.test(url)) {
     url = `https://${url}`;
   }
@@ -42,7 +42,7 @@ function originFromHost(
 export function getConfiguredSiteUrl(): string {
   const raw =
     process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
-    "https://lp.7windsparagliding.co.il";
+    "https://lp.7windsparagliding.com";
   return normalizeSiteUrl(raw);
 }
 
@@ -56,10 +56,16 @@ function isLocalOrigin(origin: string): boolean {
 }
 
 /**
- * Origin for OAuth callbacks and admin redirects.
- * Localhost in dev; configured lp subdomain in production.
+ * Origin to use for the OAuth `redirect_uri` (and the page the user lands on
+ * after login). This MUST match a redirect URI registered in Google Cloud
+ * Console, so it is pinned to the canonical configured origin regardless of
+ * which host the admin page was opened on (apex, www, lp, …). Without this,
+ * opening admin on a non-registered host triggers redirect_uri_mismatch.
+ *
+ * In local dev it follows the request (localhost) so you don't have to register
+ * a separate URI per port.
  */
-export function getSiteOrigin(req?: Request): string {
+export function getOAuthSiteOrigin(req?: Request): string {
   if (req) {
     const origin = getRequestOrigin(req);
     if (isLocalOrigin(origin)) return origin;
@@ -67,13 +73,13 @@ export function getSiteOrigin(req?: Request): string {
   return getConfiguredSiteUrl();
 }
 
-/** Same as getSiteOrigin but for Next.js middleware (NextRequest). */
-export function getSiteOriginFromNextRequest(req: {
-  headers: { get(name: string): string | null };
-  nextUrl: { host: string; protocol: string };
-}): string {
-  const origin = getRequestOriginFromNextRequest(req);
-  if (isLocalOrigin(origin)) return origin;
+/**
+ * Origin for plain browse redirects (login page, error bounces) — stays on the
+ * host the user actually opened. Falls back to the configured URL when no
+ * request is available.
+ */
+export function getSiteOrigin(req?: Request): string {
+  if (req) return getRequestOrigin(req);
   return getConfiguredSiteUrl();
 }
 

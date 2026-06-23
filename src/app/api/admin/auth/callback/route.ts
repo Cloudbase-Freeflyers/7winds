@@ -8,7 +8,7 @@ import {
   isEmailAllowedForAdmin,
   verifyAdminOAuthState,
 } from "@/lib/admin-oauth";
-import { getSiteOrigin } from "@/lib/site-url";
+import { getOAuthSiteOrigin, getRequestOrigin } from "@/lib/site-url";
 
 export const runtime = "nodejs";
 
@@ -23,8 +23,11 @@ export async function GET(req: Request) {
   const state = searchParams.get("state");
   const error = searchParams.get("error");
   const next = safeNextPath(searchParams.get("next"));
-  const origin = getSiteOrigin(req);
-  const loginUrl = `${origin}/admin/login`;
+  // OAuth redirect_uri + post-login landing must be the canonical origin (it has
+  // to match what Google sees); error/login bounces stay on the user's host.
+  const oauthOrigin = getOAuthSiteOrigin(req);
+  const browseOrigin = getRequestOrigin(req);
+  const loginUrl = `${browseOrigin}/admin/login`;
 
   if (error) {
     return NextResponse.redirect(`${loginUrl}?error=${encodeURIComponent(error)}`);
@@ -42,14 +45,14 @@ export async function GET(req: Request) {
   const redirectNext = verified.next || next;
 
   try {
-    const redirectUri = `${origin}/api/admin/auth/callback`;
+    const redirectUri = `${oauthOrigin}/api/admin/auth/callback`;
     const email = await exchangeAdminAuthCode(code, redirectUri);
     if (!isEmailAllowedForAdmin(email)) {
       return NextResponse.redirect(`${loginUrl}?error=not_allowed`);
     }
 
     const token = await createAdminSessionToken(email);
-    const res = NextResponse.redirect(`${origin}${redirectNext}`);
+    const res = NextResponse.redirect(`${oauthOrigin}${redirectNext}`);
     res.cookies.set("7winds_admin_session", token, adminSessionCookieOptions());
     return res;
   } catch (err) {

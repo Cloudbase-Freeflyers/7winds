@@ -15,8 +15,9 @@ export function isGoogleOAuthConfigured(): boolean {
   return Boolean(getGoogleOAuthCredentials());
 }
 
-export function getOAuthRedirectUri(): string {
-  return `${getConfiguredSiteUrl()}/api/email/oauth/callback`;
+export function getOAuthRedirectUri(origin?: string): string {
+  const base = (origin || getConfiguredSiteUrl()).replace(/\/$/, "");
+  return `${base}/api/email/oauth/callback`;
 }
 
 function oauthStateSecret(): string {
@@ -79,14 +80,14 @@ export function verifyOAuthState(
 
 export function buildGoogleAuthUrl(
   state: string,
-  options?: { forceConsent?: boolean }
+  options?: { forceConsent?: boolean; origin?: string }
 ): string {
   const creds = getGoogleOAuthCredentials();
   if (!creds) throw new Error("Google OAuth is not configured");
 
   const params = new URLSearchParams({
     client_id: creds.clientId,
-    redirect_uri: getOAuthRedirectUri(),
+    redirect_uri: getOAuthRedirectUri(options?.origin),
     response_type: "code",
     access_type: "offline",
     include_granted_scopes: "true",
@@ -104,7 +105,7 @@ export function buildGoogleAuthUrl(
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
 
-export async function exchangeCodeForTokens(code: string) {
+export async function exchangeCodeForTokens(code: string, origin?: string) {
   const creds = getGoogleOAuthCredentials();
   if (!creds) throw new Error("Google OAuth is not configured");
 
@@ -112,7 +113,7 @@ export async function exchangeCodeForTokens(code: string) {
     code,
     client_id: creds.clientId,
     client_secret: creds.clientSecret,
-    redirect_uri: getOAuthRedirectUri(),
+    redirect_uri: getOAuthRedirectUri(origin),
     grant_type: "authorization_code",
   });
 

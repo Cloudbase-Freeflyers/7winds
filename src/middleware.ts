@@ -3,10 +3,7 @@ import {
   ADMIN_SESSION_COOKIE,
   verifyAdminSessionToken,
 } from "@/lib/admin-session";
-import {
-  getRequestOriginFromNextRequest,
-  getSiteOriginFromNextRequest,
-} from "@/lib/site-url";
+import { getRequestOriginFromNextRequest } from "@/lib/site-url";
 
 export const config = {
   matcher: ["/admin/:path*", "/api/admin/:path*"],
@@ -24,21 +21,8 @@ function isPublicAdminPath(path: string): boolean {
   return PUBLIC_PATHS.some((p) => path === p || path.startsWith(`${p}/`));
 }
 
-function isAdminOAuthEnabled(): boolean {
-  const clientId = process.env.GOOGLE_CLIENT_ID?.trim();
-  const allowed = process.env.ADMIN_ALLOWED_EMAILS?.trim();
-  return Boolean(clientId && allowed);
-}
-
 export async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
-
-  const requestOrigin = getRequestOriginFromNextRequest(req);
-  const siteOrigin = getSiteOriginFromNextRequest(req);
-  if (requestOrigin !== siteOrigin) {
-    const target = new URL(`${path}${req.nextUrl.search}`, `${siteOrigin}/`);
-    return NextResponse.redirect(target);
-  }
 
   if (isPublicAdminPath(path)) {
     return NextResponse.next();
@@ -55,7 +39,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
   }
 
-  const origin = siteOrigin;
+  const origin = getRequestOriginFromNextRequest(req);
   const login = new URL("/admin/login", `${origin}/`);
   if (path !== "/admin/login") {
     login.searchParams.set("next", path);

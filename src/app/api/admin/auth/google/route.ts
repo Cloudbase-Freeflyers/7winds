@@ -5,7 +5,7 @@ import {
   getAdminAuthRedirectUri,
   getAdminOAuthConfigIssue,
 } from "@/lib/admin-oauth";
-import { getSiteOrigin } from "@/lib/site-url";
+import { getOAuthSiteOrigin } from "@/lib/site-url";
 
 export const runtime = "nodejs";
 
@@ -17,8 +17,7 @@ export async function GET(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const next = searchParams.get("next") || "/admin";
-  const origin = getSiteOrigin(req);
-  const redirectUri = getAdminAuthRedirectUri(origin);
+  const redirectUri = getAdminAuthRedirectUri(getOAuthSiteOrigin(req));
   const state = createAdminOAuthState(next.startsWith("/admin") ? next : "/admin");
   return NextResponse.redirect(buildAdminLoginUrl(state, redirectUri));
 }
