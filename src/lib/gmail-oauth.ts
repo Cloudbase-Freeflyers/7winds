@@ -95,9 +95,11 @@ export function buildGoogleAuthUrl(
     state,
   });
 
-  // Only force the full consent screen on first connect — reconnects reuse grants.
+  // Reconnect: let the user pick the account AND re-consent (needed for a fresh
+  // refresh token), so they can switch which Gmail sends. First connect just
+  // needs the account chooser.
   if (options?.forceConsent) {
-    params.set("prompt", "consent");
+    params.set("prompt", "select_account consent");
   } else {
     params.set("prompt", "select_account");
   }
