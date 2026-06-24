@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { resolveAffiliate, recordAffiliateEvent } from "@/lib/affiliates";
+import { logActivity } from "@/lib/activity-log";
 import { notifyAsync, notifyNewVoucher } from "@/lib/email";
 import { getDb } from "@/lib/mongodb";
+import { PACKAGE_LABELS } from "@/lib/constants";
 import { voucherSchema, normalizePhone } from "@/lib/validation";
 import type { VoucherDoc } from "@/types/submissions";
 
@@ -53,7 +55,16 @@ export async function POST(req: Request) {
       });
     }
 
-    notifyAsync(() => notifyNewVoucher({ ...doc, _id: result.insertedId }));
+    notifyAsync(async () => {
+      await logActivity({
+        type: "voucher",
+        title: `בקשת שובר — ${doc.buyerName}`,
+        detail: [`חבילה: ${PACKAGE_LABELS[doc.package] ?? doc.package}`,
+          doc.affiliateCode ? `שותף: ${doc.affiliateCode}` : null]
+          .filter(Boolean).join(" · "),
+      });
+      await notifyNewVoucher({ ...doc, _id: result.insertedId });
+    });
 
     return NextResponse.json({ ok: true, id: result.insertedId.toString() });
   } catch (err) {

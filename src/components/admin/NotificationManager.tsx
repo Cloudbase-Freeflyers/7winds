@@ -18,6 +18,17 @@ type SubscriberRow = {
   approvedAt?: string;
 };
 
+type ActivityRow = {
+  _id: string;
+  type: "lead" | "voucher" | "payment" | "notification";
+  at: string;
+  title: string;
+  detail?: string;
+  recipients?: string[];
+  status?: "sent" | "failed" | "skipped";
+  error?: string;
+};
+
 type Config = {
   configured: boolean;
   provider: "connected-gmail" | "apps-script" | null;
@@ -42,6 +53,8 @@ export default function NotificationManager() {
   const [saving, setSaving] = useState<string | null>(null);
   const [newEmail, setNewEmail] = useState("");
   const [newName, setNewName] = useState("");
+  const [testEmail, setTestEmail] = useState("");
+  const [activity, setActivity] = useState<ActivityRow[]>([]);
 
   useEffect(() => {
     if (searchParams.get("connected") === "1") {
@@ -68,9 +81,41 @@ export default function NotificationManager() {
     }
   }, [filter]);
 
+  const refreshActivity = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/activity");
+      const data = await res.json();
+      if (res.ok) setActivity(data.rows ?? []);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   useEffect(() => {
     load();
-  }, [load]);
+    refreshActivity();
+  }, [load, refreshActivity]);
+
+  async function sendTest() {
+    setSaving("test");
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await fetch("/api/admin/notifications/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic: "leads", to: testEmail.trim() || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "שליחה נכשלה");
+      setNotice(`נשלחה התראת בדיקה אל: ${(data.recipients ?? []).join(", ")}`);
+      await refreshActivity();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "שגיאה");
+    } finally {
+      setSaving(null);
+    }
+  }
 
   async function disconnectGmail() {
     if (!confirm("לנתק את חשבון Gmail?")) return;
@@ -257,6 +302,31 @@ export default function NotificationManager() {
               )}
             </div>
 
+            <div className="flex flex-wrap items-end gap-2 pt-3 mt-1 border-t border-black/5">
+              <div className="flex-1 min-w-[12rem]">
+                <label htmlFor="test-email" className="block text-xs font-bold mb-1">
+                  התראת בדיקה (ריק = לרשימת הלידים המאושרת)
+                </label>
+                <input
+                  id="test-email"
+                  type="email"
+                  dir="ltr"
+                  value={testEmail}
+                  onChange={(e) => setTestEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="w-full rounded-lg border border-black/10 px-3 py-2 text-sm"
+                />
+              </div>
+              <button
+                type="button"
+                disabled={saving === "test"}
+                onClick={sendTest}
+                className="btn-secondary btn-sm"
+              >
+                {saving === "test" ? "שולח…" : "שלח התראת בדיקה"}
+              </button>
+            </div>
+
             {config.oauthRedirectUri && (
               <p className="text-xs text-brand-dark">
                 Redirect URI ב־Google Cloud:{" "}
@@ -435,6 +505,97 @@ export default function NotificationManager() {
           </div>
         )}
       </section>
+
+      <section className="rounded-2xl bg-white ring-1 ring-black/5 shadow-sm p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-display text-xl font-extrabold">יומן פעילות</h2>
+          <button
+            type="button"
+            onClick={refreshActivity}
+            className="rounded-full bg-brand-soft px-3 py-1.5 text-xs font-bold text-brand-dark"
+          >
+            רענון
+          </button>
+        </div>
+        <p className="mt-1 text-sm text-brand-dark">
+          לידים, שוברים, תשלומים ושליחת התראות — כל שליחה מרוכזת בשורה אחת.
+        </p>
+
+        {activity.length === 0 ? (
+          <p className="mt-6 text-sm text-brand-dark">אין פעילות עדיין.</p>
+        ) : (
+          <div className="mt-4 overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead className="bg-brand-soft text-brand-dark">
+                <tr>
+                  <th className="px-3 py-3 text-start text-xs font-bold">זמן</th>
+                  <th className="px-3 py-3 text-start text-xs font-bold">סוג</th>
+                  <th className="px-3 py-3 text-start text-xs font-bold">פעולה</th>
+                  <th className="px-3 py-3 text-start text-xs font-bold">נמענים</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activity.map((a) => (
+                  <tr key={a._id} className="border-t border-black/5 align-top">
+                    <td className="px-3 py-3 text-xs text-brand-dark whitespace-nowrap" dir="ltr">
+                      {new Date(a.at).toLocaleString("he-IL")}
+                    </td>
+                    <td className="px-3 py-3">
+                      <ActivityTypeBadge type={a.type} status={a.status} />
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="font-bold text-brand-black">{a.title}</div>
+                      {a.detail && (
+                        <div className="text-xs text-brand-dark">{a.detail}</div>
+                      )}
+                      {a.error && (
+                        <div className="text-xs text-red-600" dir="ltr">{a.error}</div>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-xs text-brand-dark" dir="ltr">
+                      {a.recipients?.length ? a.recipients.join(", ") : "—"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function ActivityTypeBadge({
+  type,
+  status,
+}: {
+  type: ActivityRow["type"];
+  status?: ActivityRow["status"];
+}) {
+  const typeMap: Record<ActivityRow["type"], { label: string; cls: string }> = {
+    lead: { label: "ליד", cls: "bg-brand-sky/20 text-brand-black" },
+    voucher: { label: "שובר", cls: "bg-brand-yellow/30 text-brand-black" },
+    payment: { label: "תשלום", cls: "bg-green-100 text-green-800" },
+    notification: { label: "התראה", cls: "bg-brand-soft text-brand-dark" },
+  };
+  const t = typeMap[type];
+  const statusMap: Record<string, { label: string; cls: string }> = {
+    sent: { label: "נשלח", cls: "bg-green-100 text-green-800" },
+    failed: { label: "נכשל", cls: "bg-red-100 text-red-700" },
+    skipped: { label: "דולג", cls: "bg-gray-100 text-gray-600" },
+  };
+  const s = status ? statusMap[status] : null;
+  return (
+    <div className="flex flex-col gap-1">
+      <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-bold ${t.cls}`}>
+        {t.label}
+      </span>
+      {s && (
+        <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${s.cls}`}>
+          {s.label}
+        </span>
+      )}
     </div>
   );
 }

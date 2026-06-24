@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { recordAffiliateEvent, resolveAffiliate } from "@/lib/affiliates";
+import { logActivity } from "@/lib/activity-log";
 import { notifyAsync, notifyVoucherPaid } from "@/lib/email";
 import { parseIpnPayload } from "@/lib/icount";
 import { getDb } from "@/lib/mongodb";
+import { PACKAGE_LABELS } from "@/lib/constants";
 import type { VoucherDoc } from "@/types/submissions";
 
 export const runtime = "nodejs";
@@ -82,15 +84,23 @@ export async function POST(req: Request) {
       }
     }
 
-    notifyAsync(() =>
-      notifyVoucherPaid({
-        ...existing,
-        paymentStatus: "paid",
-        paidAt: new Date(),
-        ...(confirmationCode ? { icountConfirmationCode: confirmationCode } : {}),
-        ...(docNum && !Number.isNaN(docNum) ? { icountDocNum: docNum } : {}),
-      })
-    );
+    const paidVoucher: VoucherDoc = {
+      ...existing,
+      paymentStatus: "paid",
+      paidAt: new Date(),
+      ...(confirmationCode ? { icountConfirmationCode: confirmationCode } : {}),
+      ...(docNum && !Number.isNaN(docNum) ? { icountDocNum: docNum } : {}),
+    };
+    notifyAsync(async () => {
+      await logActivity({
+        type: "payment",
+        title: `תשלום אושר — ${existing.buyerName}`,
+        detail: [`חבילה: ${PACKAGE_LABELS[existing.package] ?? existing.package}`,
+          typeof existing.amount === "number" ? `₪${existing.amount}` : null,
+          `הזמנה: ${orderId}`].filter(Boolean).join(" · "),
+      });
+      await notifyVoucherPaid(paidVoucher);
+    });
 
     return NextResponse.json({ ok: true });
   } catch (err) {

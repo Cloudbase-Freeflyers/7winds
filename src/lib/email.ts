@@ -3,7 +3,9 @@ import { getConnectedEmailSender } from "@/lib/email-sender";
 import { getGoogleOAuthCredentials } from "@/lib/gmail-oauth";
 import { getConfiguredSiteUrl } from "@/lib/site-url";
 import { getApprovedEmailsForTopic } from "@/lib/notification-subscribers";
+import { logActivity } from "@/lib/activity-log";
 import type { NotificationTopic } from "@/types/notifications";
+import type { EmailSenderDoc } from "@/types/email-sender";
 import type { LeadDoc, VoucherDoc } from "@/types/submissions";
 
 function getSystemNotifyEmail(): string | null {
@@ -53,15 +55,15 @@ export async function getEmailConfigSummary() {
   };
 }
 
-async function getTopicRecipients(
-  topic: NotificationTopic,
-  senderEmail?: string | null
-): Promise<string[]> {
+/**
+ * Recipients for a topic are the approved subscribers in the DB only — managed
+ * from the admin notifications screen, not from env vars. (NOTIFY_EMAIL and the
+ * connected sender are no longer auto-added; add them to the list explicitly to
+ * receive mail.)
+ */
+async function getTopicRecipients(topic: NotificationTopic): Promise<string[]> {
   const approved = await getApprovedEmailsForTopic(topic);
-  const system = getSystemNotifyEmail();
   const emails = new Set<string>();
-  if (system) emails.add(system.toLowerCase());
-  if (senderEmail) emails.add(senderEmail.toLowerCase());
   for (const email of approved) emails.add(email.toLowerCase());
   return [...emails];
 }
@@ -167,30 +169,133 @@ export function notifyAsync(fn: () => Promise<void>): void {
   fn().catch((err) => console.error("[email]", err));
 }
 
+/** Send one message to every recipient via the connected Gmail or Apps Script. */
+async function dispatch(
+  connected: EmailSenderDoc | null,
+  recipients: string[],
+  msg: { subject: string; text: string }
+): Promise<void> {
+  const html = simpleHtml(msg.text);
+  for (const to of recipients) {
+    if (connected) {
+      await sendViaConnectedGmail(connected, { to, ...msg, html });
+    } else if (isAppsScriptConfigured()) {
+      await sendViaAppsScript({ to, ...msg, html });
+    }
+  }
+}
+
 /**
- * Resolve recipients for a topic and send one alert to each, via the connected
- * Gmail account (preferred) or Apps Script. No-op when email isn't configured
- * or no one is subscribed to the topic.
+ * Resolve approved recipients for a topic and send one alert to each, via the
+ * connected Gmail account (preferred) or Apps Script. Records a single activity
+ * log row per event (all recipients combined), including skipped/failed reasons
+ * so the admin can see why a notification did or didn't go out.
  */
 async function notifyTopic(
   topic: NotificationTopic,
-  build: (sender: { senderEmail: string } | null) => { subject: string; text: string }
+  build: () => { subject: string; text: string }
 ): Promise<void> {
-  if (!(await isEmailConfigured())) return;
+  const { subject, text } = build();
+  const connected = await getConnectedEmailSender();
+
+  if (!(await isEmailConfigured())) {
+    await logActivity({
+      type: "notification",
+      title: subject,
+      detail: `${topic} — אימייל לא מוגדר`,
+      status: "skipped",
+      error: "email_not_configured",
+    });
+    return;
+  }
+
+  const recipients = await getTopicRecipients(topic);
+  if (recipients.length === 0) {
+    await logActivity({
+      type: "notification",
+      title: subject,
+      detail: `${topic} — אין נמענים מאושרים`,
+      status: "skipped",
+    });
+    return;
+  }
+
+  try {
+    await dispatch(connected, recipients, { subject, text });
+    await logActivity({
+      type: "notification",
+      title: subject,
+      detail: topic,
+      recipients,
+      status: "sent",
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await logActivity({
+      type: "notification",
+      title: subject,
+      detail: topic,
+      recipients,
+      status: "failed",
+      error: msg,
+    });
+    throw err;
+  }
+}
+
+/**
+ * Send a test notification to the topic's approved recipients (or a single
+ * address if provided). Surfaces send errors to the caller instead of
+ * swallowing them, so the admin can confirm delivery from the UI.
+ */
+export async function sendTestNotification(
+  topic: NotificationTopic = "leads",
+  to?: string
+): Promise<{ recipients: string[] }> {
+  if (!(await isEmailConfigured())) {
+    throw new Error("אימייל לא מחובר — חברו חשבון Gmail תחילה.");
+  }
 
   const connected = await getConnectedEmailSender();
-  const recipients = await getTopicRecipients(topic, connected?.senderEmail);
-  if (recipients.length === 0) return;
+  const recipients = to?.trim()
+    ? [to.trim().toLowerCase()]
+    : await getTopicRecipients(topic);
+  if (recipients.length === 0) {
+    throw new Error(
+      "אין נמענים מאושרים — אשרו אימייל ברשימה או ציינו כתובת לבדיקה."
+    );
+  }
 
-  const { subject, text } = build(connected);
-  const html = simpleHtml(text);
+  const subject = "[7Winds] בדיקת התראות";
+  const text = [
+    "הודעת בדיקה ממערכת ההתראות של 7Winds.",
+    "",
+    `סוג התראה: ${topic}`,
+    `נשלח מ: ${connected?.senderEmail ?? "—"}`,
+    "אם קיבלת הודעה זו — ההתראות פעילות.",
+  ].join("\n");
 
-  for (const to of recipients) {
-    if (connected) {
-      await sendViaConnectedGmail(connected, { to, subject, text, html });
-    } else if (isAppsScriptConfigured()) {
-      await sendViaAppsScript({ to, subject, text, html });
-    }
+  try {
+    await dispatch(connected, recipients, { subject, text });
+    await logActivity({
+      type: "notification",
+      title: "בדיקת התראות",
+      detail: `בדיקה (${topic})`,
+      recipients,
+      status: "sent",
+    });
+    return { recipients };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await logActivity({
+      type: "notification",
+      title: "בדיקת התראות",
+      detail: `בדיקה (${topic})`,
+      recipients,
+      status: "failed",
+      error: msg,
+    });
+    throw err;
   }
 }
 

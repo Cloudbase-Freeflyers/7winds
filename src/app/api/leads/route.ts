@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { resolveAffiliate, recordAffiliateEvent } from "@/lib/affiliates";
+import { logActivity } from "@/lib/activity-log";
 import { notifyAsync, notifyNewLead } from "@/lib/email";
 import { getDb } from "@/lib/mongodb";
 import { leadSchema, normalizePhone } from "@/lib/validation";
@@ -53,7 +54,18 @@ export async function POST(req: Request) {
       });
     }
 
-    notifyAsync(() => notifyNewLead(doc));
+    const sourceLabel =
+      doc.source === "accessibility" ? "נגישות" : "טופס יצירת קשר";
+    notifyAsync(async () => {
+      await logActivity({
+        type: "lead",
+        title: `ליד חדש — ${doc.name}`,
+        detail: [`טלפון: ${doc.phone}`, `מקור: ${sourceLabel}`,
+          doc.affiliateCode ? `שותף: ${doc.affiliateCode}` : null]
+          .filter(Boolean).join(" · "),
+      });
+      await notifyNewLead(doc);
+    });
 
     return NextResponse.json({ ok: true, id: result.insertedId.toString() });
   } catch (err) {
