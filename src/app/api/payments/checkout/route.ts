@@ -1,10 +1,13 @@
 import { randomUUID } from "crypto";
 import { NextResponse } from "next/server";
 import { resolveAffiliate } from "@/lib/affiliates";
+import { logActivity } from "@/lib/activity-log";
 import {
   calculateBookingPrice,
   formatBookingDescription,
 } from "@/lib/booking-pricing";
+import { PACKAGE_LABELS } from "@/lib/constants";
+import { notifyAsync, notifyNewVoucher } from "@/lib/email";
 import { buildCheckoutRedirectUrl } from "@/lib/icount";
 import { getDb } from "@/lib/mongodb";
 import { checkoutSchema, normalizePhone } from "@/lib/validation";
@@ -96,6 +99,23 @@ export async function POST(req: Request) {
     await db
       .collection("vouchers")
       .createIndex({ orderId: 1 }, { unique: true, sparse: true });
+
+    const isDirect = doc.orderType === "direct";
+    notifyAsync(async () => {
+      await logActivity({
+        type: "voucher",
+        title: `${isDirect ? "הזמנה חדשה" : "בקשת שובר"} — ${doc.buyerName}`,
+        detail: [
+          `חבילה: ${PACKAGE_LABELS[doc.package] ?? doc.package}`,
+          typeof doc.amount === "number" ? `₪${doc.amount}` : null,
+          "ממתין לתשלום",
+          doc.affiliateCode ? `שותף: ${doc.affiliateCode}` : null,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      });
+      await notifyNewVoucher({ ...doc, _id: result.insertedId });
+    });
 
     return NextResponse.json({ ok: true, orderId, redirectUrl, id: result.insertedId.toString() });
   } catch (err) {

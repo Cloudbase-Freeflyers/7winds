@@ -326,31 +326,41 @@ export async function notifyNewLead(lead: LeadDoc): Promise<void> {
   });
 }
 
-/** New gift-voucher request — alerts subscribers opted into "vouchers". */
+/**
+ * New voucher request or checkout order — alerts subscribers opted into
+ * "vouchers". Wording adapts to a gift-voucher request vs a direct booking
+ * (still awaiting payment at this point).
+ */
 export async function notifyNewVoucher(voucher: VoucherDoc): Promise<void> {
   await notifyTopic("vouchers", () => {
-    const affiliateLine = voucher.affiliateCode
-      ? `\nשותף / מודעה: ${voucher.affiliateCode}`
-      : "";
+    const isDirect = voucher.orderType === "direct";
+    const heading = isDirect ? "הזמנה חדשה" : "בקשת שובר מתנה חדשה";
+    const amountLine =
+      typeof voucher.amount === "number" ? `סכום: ₪${voucher.amount}` : null;
 
     const text = [
-      "בקשת שובר מתנה חדשה באתר 7Winds",
+      `${heading} באתר 7Winds`,
       "",
       `קונה: ${voucher.buyerName}`,
       `טלפון: ${voucher.buyerPhone}`,
       voucher.buyerEmail ? `אימייל: ${voucher.buyerEmail}` : null,
       `חבילה: ${PACKAGE_LABELS[voucher.package] ?? voucher.package}`,
+      amountLine,
       voucher.recipientName ? `מקבל/ת השובר: ${voucher.recipientName}` : null,
       voucher.occasion ? `אירוע: ${voucher.occasion}` : null,
       voucher.notes ? `הערות: ${voucher.notes}` : null,
-      affiliateLine || null,
+      voucher.paymentStatus === "pending" ? "תשלום: ממתין לתשלום" : null,
+      voucher.affiliateCode ? `שותף / מודעה: ${voucher.affiliateCode}` : null,
       "",
       `ניהול: ${adminUrl("/admin/leads")}`,
     ]
       .filter(Boolean)
       .join("\n");
 
-    return { subject: `[7Winds] בקשת שובר חדשה — ${voucher.buyerName}`, text };
+    return {
+      subject: `[7Winds] ${isDirect ? "הזמנה חדשה" : "בקשת שובר"} — ${voucher.buyerName}`,
+      text,
+    };
   });
 }
 
