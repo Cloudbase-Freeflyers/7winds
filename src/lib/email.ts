@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { BRAND, PACKAGE_LABELS } from "@/lib/constants";
 import { getConnectedEmailSender } from "@/lib/email-sender";
 import { getGoogleOAuthCredentials } from "@/lib/gmail-oauth";
@@ -165,8 +166,20 @@ function simpleHtml(body: string): string {
   return `<!DOCTYPE html><html lang="he" dir="rtl"><body style="font-family:sans-serif;line-height:1.5">${escaped}</body></html>`;
 }
 
+/**
+ * Run notification/log work after the response is sent. Uses Next's after() so
+ * Vercel keeps the serverless function alive until it finishes — a plain
+ * fire-and-forget promise is killed when the function freezes on response,
+ * which silently dropped notifications (and their activity-log rows).
+ */
 export function notifyAsync(fn: () => Promise<void>): void {
-  fn().catch((err) => console.error("[email]", err));
+  after(async () => {
+    try {
+      await fn();
+    } catch (err) {
+      console.error("[email]", err);
+    }
+  });
 }
 
 /** Send one message to every recipient via the connected Gmail or Apps Script. */
