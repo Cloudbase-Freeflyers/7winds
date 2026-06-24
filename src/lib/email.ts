@@ -5,6 +5,11 @@ import { getGoogleOAuthCredentials } from "@/lib/gmail-oauth";
 import { getConfiguredSiteUrl } from "@/lib/site-url";
 import { getApprovedEmailsForTopic } from "@/lib/notification-subscribers";
 import { logActivity } from "@/lib/activity-log";
+import {
+  renderNotificationEmail,
+  type EmailRow,
+  type NotificationEmail,
+} from "@/lib/email-template";
 import type { NotificationTopic } from "@/types/notifications";
 import type { EmailSenderDoc } from "@/types/email-sender";
 import type { LeadDoc, VoucherDoc } from "@/types/submissions";
@@ -157,14 +162,14 @@ function adminUrl(path: string): string {
   return `${BRAND.url}${path}`;
 }
 
-function simpleHtml(body: string): string {
-  const escaped = body
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\n/g, "<br>");
-  return `<!DOCTYPE html><html lang="he" dir="rtl"><body style="font-family:sans-serif;line-height:1.5">${escaped}</body></html>`;
+/** Build a row list, dropping any rows whose value is missing. */
+function rowList(
+  ...items: (EmailRow | null | undefined | false | "" | 0)[]
+): EmailRow[] {
+  return items.filter((r): r is EmailRow => Boolean(r));
 }
+
+const ACCENT = { sky: "#1ABBEF", green: "#8BC441", yellow: "#FDD62A" } as const;
 
 /**
  * Run notification/log work after the response is sent. Uses Next's after() so
@@ -186,35 +191,38 @@ export function notifyAsync(fn: () => Promise<void>): void {
 async function dispatch(
   connected: EmailSenderDoc | null,
   recipients: string[],
-  msg: { subject: string; text: string }
+  msg: { subject: string; text: string; html: string }
 ): Promise<void> {
-  const html = simpleHtml(msg.text);
   for (const to of recipients) {
     if (connected) {
-      await sendViaConnectedGmail(connected, { to, ...msg, html });
+      await sendViaConnectedGmail(connected, { to, ...msg });
     } else if (isAppsScriptConfigured()) {
-      await sendViaAppsScript({ to, ...msg, html });
+      await sendViaAppsScript({ to, ...msg });
     }
   }
 }
 
 /**
- * Resolve approved recipients for a topic and send one alert to each, via the
- * connected Gmail account (preferred) or Apps Script. Records a single activity
- * log row per event (all recipients combined), including skipped/failed reasons
- * so the admin can see why a notification did or didn't go out.
+ * Resolve approved recipients for a topic and send one branded alert to each,
+ * via the connected Gmail account (preferred) or Apps Script. Records a single
+ * activity log row per event (all recipients combined), including
+ * skipped/failed reasons so the admin can see why a notification did or didn't
+ * go out.
  */
 async function notifyTopic(
   topic: NotificationTopic,
-  build: () => { subject: string; text: string }
+  build: () => NotificationEmail
 ): Promise<void> {
-  const { subject, text } = build();
+  const content = build();
+  const logTitle = content.subheading
+    ? `${content.heading} — ${content.subheading}`
+    : content.heading;
   const connected = await getConnectedEmailSender();
 
   if (!(await isEmailConfigured())) {
     await logActivity({
       type: "notification",
-      title: subject,
+      title: logTitle,
       detail: `${topic} — אימייל לא מוגדר`,
       status: "skipped",
       error: "email_not_configured",
@@ -226,18 +234,20 @@ async function notifyTopic(
   if (recipients.length === 0) {
     await logActivity({
       type: "notification",
-      title: subject,
+      title: logTitle,
       detail: `${topic} — אין נמענים מאושרים`,
       status: "skipped",
     });
     return;
   }
 
+  const { html, text } = renderNotificationEmail(content);
+
   try {
-    await dispatch(connected, recipients, { subject, text });
+    await dispatch(connected, recipients, { subject: content.subject, text, html });
     await logActivity({
       type: "notification",
-      title: subject,
+      title: logTitle,
       detail: topic,
       recipients,
       status: "sent",
@@ -246,7 +256,7 @@ async function notifyTopic(
     const msg = err instanceof Error ? err.message : String(err);
     await logActivity({
       type: "notification",
-      title: subject,
+      title: logTitle,
       detail: topic,
       recipients,
       status: "failed",
@@ -279,17 +289,24 @@ export async function sendTestNotification(
     );
   }
 
-  const subject = "[7Winds] בדיקת התראות";
-  const text = [
-    "הודעת בדיקה ממערכת ההתראות של 7Winds.",
-    "",
-    `סוג התראה: ${topic}`,
-    `נשלח מ: ${connected?.senderEmail ?? "—"}`,
-    "אם קיבלת הודעה זו — ההתראות פעילות.",
-  ].join("\n");
+  const { html, text } = renderNotificationEmail({
+    subject: "7Winds · בדיקת התראות",
+    kicker: "בדיקה",
+    heading: "בדיקת מערכת ההתראות",
+    accent: ACCENT.sky,
+    rows: rowList(
+      { label: "סוג התראה", value: topic },
+      { label: "נשלח מ", value: connected?.senderEmail ?? "—", ltr: true }
+    ),
+    note: { text: "אם קיבלת הודעה זו — ההתראות פעילות. ✓", tone: "success" },
+  });
 
   try {
-    await dispatch(connected, recipients, { subject, text });
+    await dispatch(connected, recipients, {
+      subject: "7Winds · בדיקת התראות",
+      text,
+      html,
+    });
     await logActivity({
       type: "notification",
       title: "בדיקת התראות",
@@ -317,25 +334,25 @@ export async function notifyNewLead(lead: LeadDoc): Promise<void> {
   await notifyTopic("leads", () => {
     const sourceLabel =
       lead.source === "accessibility" ? "נגישות" : "טופס יצירת קשר";
-    const affiliateLine = lead.affiliateCode
-      ? `\nשותף / מודעה: ${lead.affiliateCode}`
-      : "";
 
-    const text = [
-      "פנייה חדשה באתר 7Winds",
-      "",
-      `שם: ${lead.name}`,
-      `טלפון: ${lead.phone}`,
-      lead.message ? `הודעה: ${lead.message}` : null,
-      `מקור: ${sourceLabel}`,
-      affiliateLine || null,
-      "",
-      `ניהול: ${adminUrl("/admin/leads")}`,
-    ]
-      .filter(Boolean)
-      .join("\n");
-
-    return { subject: `[7Winds] פנייה חדשה — ${lead.name}`, text };
+    return {
+      subject: `7Winds · פנייה חדשה — ${lead.name}`,
+      kicker: "ליד חדש",
+      heading: "פנייה חדשה מהאתר",
+      subheading: lead.name,
+      accent: ACCENT.sky,
+      rows: rowList(
+        { label: "שם", value: lead.name },
+        { label: "טלפון", value: lead.phone, ltr: true },
+        lead.message && { label: "הודעה", value: lead.message },
+        { label: "מקור", value: sourceLabel },
+        lead.affiliateCode && {
+          label: "שותף / מודעה",
+          value: lead.affiliateCode,
+        }
+      ),
+      cta: { label: "פתיחת הליד בניהול", url: adminUrl("/admin/leads") },
+    };
   });
 }
 
@@ -347,58 +364,80 @@ export async function notifyNewLead(lead: LeadDoc): Promise<void> {
 export async function notifyNewVoucher(voucher: VoucherDoc): Promise<void> {
   await notifyTopic("vouchers", () => {
     const isDirect = voucher.orderType === "direct";
-    const heading = isDirect ? "הזמנה חדשה" : "בקשת שובר מתנה חדשה";
-    const amountLine =
-      typeof voucher.amount === "number" ? `סכום: ₪${voucher.amount}` : null;
-
-    const text = [
-      `${heading} באתר 7Winds`,
-      "",
-      `קונה: ${voucher.buyerName}`,
-      `טלפון: ${voucher.buyerPhone}`,
-      voucher.buyerEmail ? `אימייל: ${voucher.buyerEmail}` : null,
-      `חבילה: ${PACKAGE_LABELS[voucher.package] ?? voucher.package}`,
-      amountLine,
-      voucher.recipientName ? `מקבל/ת השובר: ${voucher.recipientName}` : null,
-      voucher.occasion ? `אירוע: ${voucher.occasion}` : null,
-      voucher.notes ? `הערות: ${voucher.notes}` : null,
-      voucher.paymentStatus === "pending" ? "תשלום: ממתין לתשלום" : null,
-      voucher.affiliateCode ? `שותף / מודעה: ${voucher.affiliateCode}` : null,
-      "",
-      `ניהול: ${adminUrl("/admin/leads")}`,
-    ]
-      .filter(Boolean)
-      .join("\n");
 
     return {
-      subject: `[7Winds] ${isDirect ? "הזמנה חדשה" : "בקשת שובר"} — ${voucher.buyerName}`,
-      text,
+      subject: `7Winds · ${isDirect ? "הזמנה חדשה" : "בקשת שובר"} — ${voucher.buyerName}`,
+      kicker: isDirect ? "הזמנה חדשה" : "שובר מתנה",
+      heading: isDirect ? "הזמנה חדשה" : "בקשת שובר מתנה",
+      subheading: voucher.buyerName,
+      accent: ACCENT.yellow,
+      rows: rowList(
+        { label: "קונה", value: voucher.buyerName },
+        { label: "טלפון", value: voucher.buyerPhone, ltr: true },
+        voucher.buyerEmail && {
+          label: "אימייל",
+          value: voucher.buyerEmail,
+          ltr: true,
+        },
+        {
+          label: "חבילה",
+          value: PACKAGE_LABELS[voucher.package] ?? voucher.package,
+        },
+        typeof voucher.amount === "number" && {
+          label: "סכום",
+          value: `₪${voucher.amount}`,
+        },
+        voucher.recipientName && {
+          label: "מקבל/ת השובר",
+          value: voucher.recipientName,
+        },
+        voucher.occasion && { label: "אירוע", value: voucher.occasion },
+        voucher.notes && { label: "הערות", value: voucher.notes },
+        voucher.affiliateCode && {
+          label: "שותף / מודעה",
+          value: voucher.affiliateCode,
+        }
+      ),
+      note:
+        voucher.paymentStatus === "pending"
+          ? { text: "ממתין לתשלום", tone: "warning" }
+          : undefined,
+      cta: { label: "פתיחה בניהול", url: adminUrl("/admin/leads") },
     };
   });
 }
 
 /** Confirmed payment — alerts subscribers opted into "payments". */
 export async function notifyVoucherPaid(voucher: VoucherDoc): Promise<void> {
-  await notifyTopic("payments", () => {
-    const amountLine =
-      typeof voucher.amount === "number" ? `סכום: ₪${voucher.amount}` : null;
-
-    const text = [
-      "תשלום אושר באתר 7Winds",
-      "",
-      `קונה: ${voucher.buyerName}`,
-      `טלפון: ${voucher.buyerPhone}`,
-      `חבילה: ${PACKAGE_LABELS[voucher.package] ?? voucher.package}`,
-      amountLine,
-      voucher.orderId ? `מספר הזמנה: ${voucher.orderId}` : null,
-      voucher.icountDocNum ? `חשבונית iCount: ${voucher.icountDocNum}` : null,
-      voucher.affiliateCode ? `שותף / מודעה: ${voucher.affiliateCode}` : null,
-      "",
-      `ניהול: ${adminUrl("/admin/leads")}`,
-    ]
-      .filter(Boolean)
-      .join("\n");
-
-    return { subject: `[7Winds] תשלום אושר — ${voucher.buyerName}`, text };
-  });
+  await notifyTopic("payments", () => ({
+    subject: `7Winds · תשלום אושר — ${voucher.buyerName}`,
+    kicker: "תשלום",
+    heading: "תשלום אושר",
+    subheading: voucher.buyerName,
+    accent: ACCENT.green,
+    rows: rowList(
+      { label: "קונה", value: voucher.buyerName },
+      { label: "טלפון", value: voucher.buyerPhone, ltr: true },
+      {
+        label: "חבילה",
+        value: PACKAGE_LABELS[voucher.package] ?? voucher.package,
+      },
+      typeof voucher.amount === "number" && {
+        label: "סכום",
+        value: `₪${voucher.amount}`,
+      },
+      voucher.orderId && { label: "מספר הזמנה", value: voucher.orderId, ltr: true },
+      voucher.icountDocNum && {
+        label: "חשבונית iCount",
+        value: String(voucher.icountDocNum),
+        ltr: true,
+      },
+      voucher.affiliateCode && {
+        label: "שותף / מודעה",
+        value: voucher.affiliateCode,
+      }
+    ),
+    note: { text: "✓ שולם", tone: "success" },
+    cta: { label: "פתיחה בניהול", url: adminUrl("/admin/leads") },
+  }));
 }
