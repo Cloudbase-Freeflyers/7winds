@@ -162,6 +162,22 @@ function adminUrl(path: string): string {
   return `${BRAND.url}${path}`;
 }
 
+/** Human-readable payment status for emails. */
+function paymentStatusLabel(status?: VoucherDoc["paymentStatus"]): string {
+  switch (status) {
+    case "paid":
+      return "שולם ✓";
+    case "pending":
+      return "ממתין לתשלום";
+    case "failed":
+      return "נכשל";
+    case "cancelled":
+      return "בוטל";
+    default:
+      return "בקשה חדשה";
+  }
+}
+
 /** Build a row list, dropping any rows whose value is missing. */
 function rowList(
   ...items: (EmailRow | null | undefined | false | "" | 0)[]
@@ -393,15 +409,16 @@ export async function notifyNewVoucher(voucher: VoucherDoc): Promise<void> {
         },
         voucher.occasion && { label: "אירוע", value: voucher.occasion },
         voucher.notes && { label: "הערות", value: voucher.notes },
+        { label: "סטטוס", value: paymentStatusLabel(voucher.paymentStatus) },
         voucher.affiliateCode && {
           label: "שותף / מודעה",
           value: voucher.affiliateCode,
         }
       ),
       note:
-        voucher.paymentStatus === "pending"
-          ? { text: "ממתין לתשלום", tone: "warning" }
-          : undefined,
+        voucher.paymentStatus === "paid"
+          ? { text: "✓ שולם", tone: "success" }
+          : { text: paymentStatusLabel(voucher.paymentStatus), tone: "warning" },
       cta: { label: "פתיחה בניהול", url: adminUrl("/admin/leads") },
     };
   });
@@ -426,6 +443,7 @@ export async function notifyVoucherPaid(voucher: VoucherDoc): Promise<void> {
         label: "סכום",
         value: `₪${voucher.amount}`,
       },
+      { label: "סטטוס", value: "שולם ✓" },
       voucher.orderId && { label: "מספר הזמנה", value: voucher.orderId, ltr: true },
       voucher.icountDocNum && {
         label: "חשבונית iCount",
